@@ -65,6 +65,7 @@
   (:require [clojure.string :as str]
             [commitledger.edge.auth :as auth]
             [commitledger.edge.isic6492-client :as isic6492]
+            [commitledger.edge.kotobase-store :as kotobase]
             [commitledger.edge.kv-checkpoint :as kvcp]
             [commitledger.edge.kv-codec :as kv-codec]
             [commitledger.edge.kv-store :as kv]
@@ -467,16 +468,31 @@
      (-> (.json (aget context "request"))
          (.catch (fn [_] nil)))))
 
+;; kotobase-persistence-migration (docs/adr/0004): `(kv/cloudflare-kv-
+;; store env)` -- a synchronous constructor -- is replaced at every
+;; call site below by `(kotobase/kotobase-kv-store-from-env! env)`, an
+;; ASYNC constructor (minting this actor's own CACAO is; see that ns's
+;; docstring). `intake-core!`/`record-core!`/`tranche-release-core!`/
+;; `approve-core!`/`get-application-core` ABOVE never change -- they
+;; already only depend on the `KVStore` protocol, and `KotobaseKVStore`
+;; implements it -- only these `:cljs`-only entry points need to await
+;; the store's construction before calling into the core fns. If
+;; kotobase.net is unreachable or this actor's identity is misconfigured,
+;; `kotobase-kv-store-from-env!` REJECTS, and the `.catch` below turns
+;; that into a clear 500 -- there is no KV fallback path at all anymore.
+
 #?(:cljs
    (defn on-request-post-intake [context]
      (let [env (aget context "env")
            [org repo] (params-of context)]
-       (-> (body-of! context)
-           (.then (fn [body]
-                    (if-not body
-                      (auth/json-response {:ok false :error "invalid request body"} 400)
-                      (intake-core! (kv/cloudflare-kv-store env) (lookup/live-lookup) (auth/live-verifier)
-                                    (cacao-header-of context) org repo (js->clj body)))))
+       (-> (js/Promise.all #js [(kotobase/kotobase-kv-store-from-env! env) (body-of! context)])
+           (.then (fn [results]
+                    (let [kv-store (aget results 0)
+                          body (aget results 1)]
+                      (if-not body
+                        (auth/json-response {:ok false :error "invalid request body"} 400)
+                        (intake-core! kv-store (lookup/live-lookup) (auth/live-verifier)
+                                      (cacao-header-of context) org repo (js->clj body))))))
            (.then ->js-response)
            (.catch (fn [e] (->js-response (auth/json-response {:ok false :error "request failed" :reason (ex-message e)} 500))))))))
 
@@ -508,11 +524,14 @@
            isic6492-base-url (aget env "ISIC6492_BASE_URL")]
        (-> (if-not (seq (str subject))
              (js/Promise.resolve (auth/json-response {:ok false :error "?id= (the application id) is required"} 400))
-             (-> (isic6492/live-client-from-env env isic6492-base-url)
-                 (.then (fn [client]
-                          (record-core! (kv/cloudflare-kv-store env) (kvcp/cloudflare-checkpoint-store env)
-                                        (auth/live-verifier) (cacao-header-of context) org repo subject
-                                        {:isic6492-client client :wait-until (wait-until-of context)})))))
+             (.then (js/Promise.all #js [(kotobase/kotobase-kv-store-from-env! env)
+                                        (isic6492/live-client-from-env env isic6492-base-url)])
+                    (fn [results]
+                      (let [kv-store (aget results 0)
+                            client (aget results 1)]
+                        (record-core! kv-store (kvcp/cloudflare-checkpoint-store env)
+                                      (auth/live-verifier) (cacao-header-of context) org repo subject
+                                      {:isic6492-client client :wait-until (wait-until-of context)})))))
            (.then ->js-response)
            (.catch (fn [e] (->js-response (auth/json-response {:ok false :error "request failed" :reason (ex-message e)} 500))))))))
 
@@ -523,11 +542,13 @@
            subject (subject-param context)]
        (-> (if-not (seq (str subject))
              (js/Promise.resolve (auth/json-response {:ok false :error "?id= (the application id) is required"} 400))
-             (.then (body-of! context)
-                    (fn [body]
-                      (tranche-release-core! (kv/cloudflare-kv-store env) (kvcp/cloudflare-checkpoint-store env)
-                                              (auth/live-verifier)
-                                              (cacao-header-of context) org repo subject (js->clj (or body #js {}))))))
+             (.then (js/Promise.all #js [(kotobase/kotobase-kv-store-from-env! env) (body-of! context)])
+                    (fn [results]
+                      (let [kv-store (aget results 0)
+                            body (aget results 1)]
+                        (tranche-release-core! kv-store (kvcp/cloudflare-checkpoint-store env)
+                                                (auth/live-verifier)
+                                                (cacao-header-of context) org repo subject (js->clj (or body #js {})))))))
            (.then ->js-response)
            (.catch (fn [e] (->js-response (auth/json-response {:ok false :error "request failed" :reason (ex-message e)} 500))))))))
 
@@ -541,16 +562,19 @@
            [org repo] (params-of context)
            id (path-id-of context)
            isic6492-base-url (aget env "ISIC6492_BASE_URL")]
-       (-> (.then (body-of! context)
-                  (fn [body]
-                    (.then (isic6492/live-client-from-env env isic6492-base-url)
-                           (fn [client]
-                             (let [b (js->clj (or body #js {}))
-                                   approved? (boolean (or (get b "approved")
-                                                          (= "approved" (get b "status"))))]
-                               (approve-core! (kv/cloudflare-kv-store env) (kvcp/cloudflare-checkpoint-store env)
-                                              (auth/live-verifier) (cacao-header-of context) org repo id approved?
-                                              {:isic6492-client client :wait-until (wait-until-of context)}))))))
+       (-> (js/Promise.all #js [(kotobase/kotobase-kv-store-from-env! env)
+                               (body-of! context)
+                               (isic6492/live-client-from-env env isic6492-base-url)])
+           (.then (fn [results]
+                    (let [kv-store (aget results 0)
+                          body (aget results 1)
+                          client (aget results 2)
+                          b (js->clj (or body #js {}))
+                          approved? (boolean (or (get b "approved")
+                                                 (= "approved" (get b "status"))))]
+                      (approve-core! kv-store (kvcp/cloudflare-checkpoint-store env)
+                                     (auth/live-verifier) (cacao-header-of context) org repo id approved?
+                                     {:isic6492-client client :wait-until (wait-until-of context)}))))
            (.then ->js-response)
            (.catch (fn [e] (->js-response (auth/json-response {:ok false :error "request failed" :reason (ex-message e)} 500))))))))
 
@@ -558,6 +582,7 @@
    (defn on-request-get-application [context]
      (let [env (aget context "env")
            id (path-id-of context)]
-       (-> (get-application-core (kv/cloudflare-kv-store env) id)
+       (-> (kotobase/kotobase-kv-store-from-env! env)
+           (.then (fn [kv-store] (get-application-core kv-store id)))
            (.then ->js-response)
            (.catch (fn [e] (->js-response (auth/json-response {:ok false :error "request failed" :reason (ex-message e)} 500))))))))

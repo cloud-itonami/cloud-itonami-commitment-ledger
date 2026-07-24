@@ -80,7 +80,25 @@
 
 ;; ---- encode (text/array/map only — see ns docstring) ----------------------
 
-(defn- header [major n]
+(defn header
+  "Public (was private) so `commitledger.edge.kotobase-identity` can build
+  a THIRD envelope shape this ns's own `encode-cacao-envelope` doesn't
+  produce -- kotobase.net's edge (`kotobase-cf-wasm.auth/verify-cacao`)
+  requires the signature sub-map to carry `\"t\": \"EdDSA\"` (checked
+  via `(not= (aget s \"t\") \"EdDSA\")`), which `encode-cacao-envelope`
+  below never included (built instead for `commitledger.edge.cacao/
+  verify`'s OWN, more lenient decode, which never reads `s.t` at all --
+  confirmed directly, kotobase-persistence-migration docs/adr/0004: a
+  CACAO minted via the existing `commitledger.edge.cacao-mint/mint` +
+  this ns's `encode-cacao-envelope` verified fine against THIS repo's
+  own `cacao/verify` and even against the canonical `cacao.core/verify`
+  -- kotoba-lang/org-chainagnostic-cacao's own CBOR codec doesn't check
+  `s.t` either -- but kotobase.net itself rejected it with a generic
+  401 \"Unauthorized\", traced to exactly this missing field). Widening
+  `header`'s visibility (a pure, already-public-shaped helper -- no
+  behavior change) is the minimal fix; `encode-cacao-envelope` itself is
+  UNCHANGED (still used, unmodified, for isic-6492 calls)."
+  [major n]
   (cond
     (< n 24)      [(bit-or (bit-shift-left major 5) n)]
     (<= n 0xff)   [(bit-or (bit-shift-left major 5) 24) n]
@@ -94,7 +112,9 @@
     (throw (js/Error. (str "cbor encode: expected a string, got " (pr-str s)))))
   (vec (array-seq (js/Array.from (.encode (js/TextEncoder.) s)))))
 
-(defn- encode-text [s]
+(defn encode-text
+  "Public (was private) -- see `header`'s docstring for why."
+  [s]
   (into (header 3 (count (utf8-bytes s))) (utf8-bytes s)))
 
 (defn- encode-str-array [strs]

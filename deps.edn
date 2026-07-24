@@ -12,9 +12,31 @@
         io.github.kotoba-lang/langchain-store
         {:local/root "../../kotoba-lang/langchain-store"}}
  :aliases
- {;; offline workspace dev -- pin transitive langchain-clj to local checkout
+ {;; offline workspace dev -- pin transitive langchain-clj to local checkout.
+  ;; TWO distinct maven coordinates resolve to this same physical repo in
+  ;; this dep graph: io.github.com-junkawasaki/langchain-clj (this repo's
+  ;; own + langchain-store's declared coordinate) AND io.github.kotoba-
+  ;; lang/langchain (langgraph-clj's OWN declared coordinate, git-SHA-
+  ;; pinned -- langgraph's deps.edn has its OWN :dev alias overriding
+  ;; THAT coordinate to a local root, but a :local/root dependency's
+  ;; aliases are not transitively composed by a consumer, so that
+  ;; override never activates here). Without overriding BOTH
+  ;; coordinates, the classpath ends up with the STALE gitlibs-pinned
+  ;; io.github.kotoba-lang/langchain (via langgraph-clj) ordered BEFORE
+  ;; this override's fresh local checkout, and Clojure's classloader
+  ;; silently loads whichever langchain/kotoba_db.cljc it finds FIRST --
+  ;; confirmed directly while adding commitledger.edge.kotobase-store
+  ;; (the first code in this repo to exercise langchain.kotoba-db/
+  ;; kotoba-api-async, a brand-new fn added by this same migration):
+  ;; `clojure -M:dev:test` threw "No such var: kdb/kotoba-api-async"
+  ;; despite the fn genuinely existing in the local checkout, because
+  ;; the OLDER gitlibs-pinned copy (predating that addition) was the one
+  ;; actually loaded. Overriding both coordinates to the same local root
+  ;; closes this gap.
   :dev {:override-deps
         {io.github.com-junkawasaki/langchain-clj
+         {:local/root "../../kotoba-lang/langchain"}
+         io.github.kotoba-lang/langchain
          {:local/root "../../kotoba-lang/langchain"}}}
   ;; clojure -M:dev:run  -> drive the demo through one OperationActor
   :run {:main-opts ["-m" "commitledger.sim"]}
