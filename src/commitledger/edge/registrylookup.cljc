@@ -94,6 +94,28 @@
 (defn check-registration
   "org, repo, lookup -> promise-like of bool (:self-registered?
   unwrapped) -- the one fn `commitledger.edge.commitment-endpoints`
-  actually calls at intake time."
+  actually calls at intake time.
+
+  BUGFIX (`docs/adr/0003-isic6492-wiring-and-approval-resume.md`):
+  wraps the keyword in an explicit `fn` rather than passing the bare
+  keyword `:self-registered?` directly as the `.then` callback.
+  Confirmed empirically (2026-07-24, against the REAL shadow-cljs
+  `:release`-compiled, deployed artifact, via a live `POST /api/
+  commitment/intake` call) that a bare ClojureScript keyword passed
+  directly as a native `js/Promise.prototype.then` callback does NOT
+  reliably unwrap the map on this compiled artifact -- the whole
+  `{:self-registered? bool}` map leaked through as `:borrower-
+  registration-verified?` instead of the plain boolean, which meant
+  check 13 (`commitledger.governor/borrower-registration-not-verified-
+  violations`, `(true? map)` is always false) HELD every single
+  `:commitment/record` unconditionally, on every application, live --
+  a real, silent, production-blocking bug this repo's own JVM test
+  suite could never catch (`commitledger.edge.pcompat`'s `:clj` branch
+  calls `(f p)` directly, where keyword-as-fn application always works
+  correctly on the JVM -- the SAME class of CLJS/JVM behavioral gap
+  ADR-0002 Decision 8 already names for the cacao crypto path, just
+  surfacing here as a genuine functional bug instead of an untested
+  path). This is a pure plumbing fix -- it does not touch, reorder, or
+  reinterpret any of the 13 Governor checks."
   [lookup org repo]
-  (pc/then (-check-registration lookup org repo) :self-registered?))
+  (pc/then (-check-registration lookup org repo) (fn [m] (:self-registered? m))))

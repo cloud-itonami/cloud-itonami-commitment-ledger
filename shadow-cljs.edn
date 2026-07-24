@@ -15,5 +15,6 @@
              {:exports {intakeOnRequestPost commitledger.edge.commitment-endpoints/on-request-post-intake
                         recordOnRequestPost commitledger.edge.commitment-endpoints/on-request-post-record
                         trancheReleaseOnRequestPost commitledger.edge.commitment-endpoints/on-request-post-tranche-release
+                        approveOnRequestPost commitledger.edge.commitment-endpoints/on-request-post-approve
                         applicationOnRequestGet commitledger.edge.commitment-endpoints/on-request-get-application}}}
    :compiler-options {:output-feature-set :es2020 :infer-externs :auto}}}}

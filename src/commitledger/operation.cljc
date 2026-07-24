@@ -25,10 +25,37 @@
   lender). The approver resumes with `{:approval {:status :approved}}`
   (or :rejected). `:commitment/record`/`:commitment/tranche-release`
   ALWAYS reach this node when the governor is clean -- see
-  `commitledger.phase`."
+  `commitledger.phase`.
+
+  V3 addendum (`docs/adr/0003-isic6492-wiring-and-approval-resume.md`):
+  the `:commit` node ALSO, when `(:op request)` is `:commitment/record`
+  (never `:commitment/tranche-release` -- only the initial record
+  triggers a NEW isic-6492 intake), calls an injected `Isic6492Client`
+  (`commitledger.edge.isic6492-client`, default nil = skip, matching
+  every EXISTING test's `(op/build store)` call with no opts) to create
+  the corresponding disbursement-side application on `cloud-itonami-
+  isic-6492` -- FIRE-AND-FORGET with respect to commit success (a
+  failed/slow isic-6492 call never rolls back or fails THIS actor's own
+  commit; see `Isic6492Client`'s own docstring for why), with the
+  outcome recorded as a NEW audit-ledger fact
+  (`:t :isic6492-intake-attempted`), never silently swallowed. This is
+  the ONLY exception to this ns's usual layering (core `commitledger.*`
+  namespaces do not otherwise depend on `commitledger.edge.*`) -- an
+  intentional, task-scoped exception, not a precedent to generalize;
+  see the ADR for why the `:commit` node is the correct and only hook
+  point (it is the only node that calls `store/commit-record!`, so it is
+  the only place that can read back the NOW-COMMITTED application via
+  `store/application` before calling out). `commitledger.edge.
+  isic6492-client`/`commitledger.edge.pcompat` are both portable
+  `.cljc` (no unconditional `js/*`, only inside `#?(:cljs ...)`
+  branches) -- requiring them here does NOT make this ns itself require
+  `js/*`, and the default `nil` client / identity `wait-until` keep
+  every JVM test path exactly as synchronous as before."
   (:require [langgraph.graph :as g]
             [langgraph.checkpoint :as cp]
             [commitledger.advisor :as advisor]
+            [commitledger.edge.isic6492-client :as isic6492]
+            [commitledger.edge.pcompat :as pc]
             [commitledger.governor :as governor]
             [commitledger.phase :as phase]
             [commitledger.store :as store]))
@@ -52,11 +79,30 @@
   "Compiles an OperationActor graph bound to `store` (any
   `commitledger.store/Store`).
   opts:
-    :advisor      -- a `commitledger.advisor/Advisor` (default: mock-advisor)
-    :checkpointer -- langgraph checkpointer (default: in-mem)"
-  [store & [{:keys [advisor checkpointer]
+    :advisor         -- a `commitledger.advisor/Advisor` (default: mock-advisor)
+    :checkpointer    -- langgraph checkpointer (default: in-mem)
+    :isic6492-client -- a `commitledger.edge.isic6492-client/Isic6492Client`
+                        (default: nil = skip the call entirely -- every
+                        pre-V3 caller of `build` with no opts, including
+                        every existing test, keeps behaving exactly as
+                        before)
+    :wait-until      -- a fn of promise-like -> promise-like, called
+                        around the (fire-and-forget) isic-6492 call
+                        (default: identity passthrough). The
+                        `:cljs`-only edge entry points wrap this around
+                        the Cloudflare Pages Functions `context.
+                        waitUntil` (see `commitledger.edge.commitment-
+                        endpoints`) so the async call survives after the
+                        HTTP response returns; the JVM test path's
+                        default is already synchronous (`commitledger.
+                        edge.pcompat`'s `:clj` branch), so wrapping it
+                        in identity is a genuine no-op there, not a
+                        stub"
+  [store & [{:keys [advisor checkpointer isic6492-client wait-until]
              :or   {advisor      (advisor/mock-advisor)
-                    checkpointer (cp/mem-checkpointer)}}]]
+                    checkpointer (cp/mem-checkpointer)
+                    isic6492-client nil
+                    wait-until   identity}}]]
   (-> (g/state-graph
        {:channels
         {:request     {:default nil}
@@ -126,11 +172,28 @@
                             {:t :approval-rejected})]})))
 
       ;; Commit -- the ONLY node that writes the SSoT + audit ledger.
+      ;; V3: also fire-and-forget an isic-6492 intake for a NEW
+      ;; :commitment/record (never :commitment/tranche-release) -- see
+      ;; ns docstring + docs/adr/0003-isic6492-wiring-and-approval-
+      ;; resume.md.
       (g/add-node :commit
         (fn [{:keys [request context proposal record]}]
           (store/commit-record! store record)
           (let [f (commit-fact request context proposal)]
             (store/append-ledger! store f)
+            (when (and isic6492-client (= :commitment/record (:op request)))
+              (let [application (store/application store (:subject request))]
+                (wait-until
+                 (pc/then
+                  (isic6492/-intake-loan-application isic6492-client application)
+                  (fn [{:keys [ok? id error]}]
+                    (store/append-ledger!
+                     store
+                     (if ok?
+                       {:t :isic6492-intake-attempted :op (:op request)
+                        :subject (:subject request) :outcome :ok :detail id}
+                       {:t :isic6492-intake-attempted :op (:op request)
+                        :subject (:subject request) :outcome :failed :detail error})))))))
             {:audit [f]})))
 
       ;; Hold -- write the rejection to the ledger; no SSoT mutation.

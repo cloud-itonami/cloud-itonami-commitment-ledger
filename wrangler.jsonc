@@ -8,5 +8,16 @@
       "binding": "COMMITMENT_LEDGER_KV",
       "id": "2e0e593fb07540b9a39630a931c2e358"
     }
-  ]
+  ],
+  "vars": {
+    // Public (not secret -- it IS the public key, base58-encoded).
+    // Set/updated via `wrangler pages deployment ... --var` or the
+    // dashboard; regenerate with scripts/generate-actor-identity.cljs.
+    // COMMITMENT_LEDGER_ACTOR_SEED (the private key material) is a
+    // Cloudflare Pages SECRET (`wrangler pages secret put
+    // COMMITMENT_LEDGER_ACTOR_SEED --project-name
+    // cloud-itonami-commitment-ledger`), never placed here.
+    "COMMITMENT_LEDGER_ACTOR_DID": "did:key:z6MksdBBMCXDAZs4PQRyLTzRJpr88FjiayxPrNKfhGwshPLx",
+    "ISIC6492_BASE_URL": "https://cloud-itonami-isic-6492.pages.dev"
+  }
 }
