@@ -1,0 +1,12 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "cloud-itonami-commitment-ledger",
+  "pages_build_output_dir": "public",
+  "compatibility_date": "2026-06-28",
+  "kv_namespaces": [
+    {
+      "binding": "COMMITMENT_LEDGER_KV",
+      "id": "2e0e593fb07540b9a39630a931c2e358"
+    }
+  ]
+}

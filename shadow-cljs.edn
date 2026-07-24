@@ -1,0 +1,19 @@
+;; V2 edge build (docs/adr/0002-http-edge-live-registry-verification.md) --
+;; mirrors gftdcojp/cloud-itonami's own shadow-cljs.edn :edge-api build
+;; (:target :esm, one shared bundle, thin functions/api/**.js re-export
+;; shims). REBUILD COMMAND: `npx shadow-cljs release edge-api` -- NOT
+;; `compile` (same caveat that repo's own shadow-cljs.edn documents at
+;; length: `compile`'s dev-mode artifact imports a machine-local
+;; /private/tmp/cljs-runtime/... path and cannot load standalone or on a
+;; Cloudflare Pages Function's runtime).
+{:deps {:aliases [:cljs]}
+ :builds
+ {:edge-api
+  {:target :esm
+   :output-dir "functions/edge"
+   :modules {:commitment-edge-core
+             {:exports {intakeOnRequestPost commitledger.edge.commitment-endpoints/on-request-post-intake
+                        recordOnRequestPost commitledger.edge.commitment-endpoints/on-request-post-record
+                        trancheReleaseOnRequestPost commitledger.edge.commitment-endpoints/on-request-post-tranche-release
+                        applicationOnRequestGet commitledger.edge.commitment-endpoints/on-request-get-application}}}
+   :compiler-options {:output-feature-set :es2020 :infer-externs :auto}}}}

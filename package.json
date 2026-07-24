@@ -1,0 +1,10 @@
+{
+  "name": "cloud-itonami-commitment-ledger",
+  "private": true,
+  "type": "module",
+  "comment": "V2 (docs/adr/0002-http-edge-live-registry-verification.md): shadow-cljs compiles src/commitledger/edge/*.cljc's :cljs branch (see shadow-cljs.edn :edge-api build) into functions/edge/commitment-edge-core.js, re-exported by the thin functions/api/commitment/*.js shims -- mirroring gftdcojp/cloud-itonami's own :edge-api build. shadow-cljs itself is not a devDependency here either (matching that repo's own package.json) -- `npx shadow-cljs` resolves it on demand; deps.edn's :cljs alias supplies the JVM-side thheller/shadow-cljs + clojurescript classpath shadow-cljs needs.",
+  "scripts": {
+    "build-edge": "npx shadow-cljs release edge-api",
+    "deploy": "wrangler pages deploy public --project-name=cloud-itonami-commitment-ledger"
+  }
+}
