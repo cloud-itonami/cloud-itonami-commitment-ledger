@@ -1,0 +1,12 @@
+{:itonami.blueprint/id "cloud-itonami-commitment-ledger"
+ :itonami.blueprint/name "Commitment Ledger -- loan-based commitment matching for self-registered businesses"
+ :itonami.blueprint/isic-rev5 nil
+ :itonami.blueprint/domain :finance/lending-matchmaking
+ :itonami.blueprint/license "AGPL-3.0-or-later"
+ :itonami.blueprint/social-impact [:financial-inclusion :data-sovereignty :transparency :youth-entrepreneurship]
+ :itonami.blueprint/governor :commitment-ledger-governor
+ :itonami.blueprint/required-technologies [:identity :forms :dmn :bpmn :audit-ledger :banking]
+ :itonami.blueprint/optional-technologies []
+ :itonami.blueprint/status :public-oss
+ :itonami.blueprint/robotics false
+ :itonami.blueprint/maturity :implemented}
