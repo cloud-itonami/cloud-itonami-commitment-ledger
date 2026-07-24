@@ -6,7 +6,19 @@
 ;; length: `compile`'s dev-mode artifact imports a machine-local
 ;; /private/tmp/cljs-runtime/... path and cannot load standalone or on a
 ;; Cloudflare Pages Function's runtime).
-{:deps {:aliases [:cljs]}
+;; :dev composed alongside :cljs so shadow-cljs's OWN classpath resolution
+;; picks up deps.edn's `:dev` :override-deps (pins BOTH langchain-clj maven
+;; coordinates -- io.github.com-junkawasaki/langchain-clj AND io.github.
+;; kotoba-lang/langchain -- to the local monorepo checkout; see that
+;; alias's own deps.edn comment for the full two-coordinate reasoning).
+;; Without composing :dev here, `npx shadow-cljs release edge-api` silently
+;; compiles against the STALE gitlibs-pinned io.github.kotoba-lang/langchain
+;; (via langgraph-clj's transitive dep), predating `kotoba-api-async` --
+;; confirmed directly while adding `commitledger.edge.kotobase-store`:
+;; `shadow-cljs release edge-api` emitted "WARNING: Use of undeclared Var
+;; langchain.kotoba-db/kotoba-api-async" (compiles, but throws at runtime)
+;; until this alias was added.
+{:deps {:aliases [:dev :cljs]}
  :builds
  {:edge-api
   {:target :esm

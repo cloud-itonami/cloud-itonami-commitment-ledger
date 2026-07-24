@@ -61,7 +61,34 @@
   (individual-lender-commitment-count [s lender-id] "count of PRIOR COMMITTED commitment-record drafts whose lender_id = lender-id -- ground truth for commitledger.governor/individual-lender-loan-count-exceeds-threshold-violations")
   (commit-record! [s record] "apply a committed op's record to the SSoT")
   (append-ledger! [s fact]   "append one immutable decision fact")
-  (with-applications [s applications] "replace/seed the application directory (map id->application)"))
+  (with-applications [s applications] "replace/seed the application directory (map id->application)")
+  (ledger-state [s]
+    "the FULL cross-application aggregate as one kv-store-shaped map
+    ({:ledger :commitment-history :tranche-release-history
+    :released-tranches :commitment-sequences :tranche-sequences}) --
+    added (ADR kotobase-persistence-migration) as the bulk-read
+    counterpart `commitledger.edge.kotobase-store`'s request-scoped
+    hydrate needs: hydrating this aggregate one protocol-method-call-
+    per-field (this Store already exposes every individual piece via
+    `ledger`/`commitment-history`/`tranche-release-history`/
+    `released-tranches-of`/`next-commitment-sequence`/`next-tranche-
+    sequence`) is exactly what `commitledger.edge.kv-store/save-store!`
+    already does when TALKING to this protocol from the outside; this
+    method exists so a Store backed by an ASYNC db-api (kotobase.net,
+    where each of those individual reads is a separate remote round-
+    trip) can do the SAME aggregation itself, chained, and hand back one
+    promise-like of the whole map instead of making the caller
+    orchestrate N separate awaited calls.")
+  (with-ledger-state [s ledger-state]
+    "bulk-replace the FULL cross-application aggregate from a kv-store-
+    shaped map (see `ledger-state` above) -- the bulk-write counterpart,
+    added for the same reason: `commitledger.edge.kotobase-store`'s
+    request-scoped persist needs to set every field of the aggregate at
+    once after a StateGraph run, and a Store backed by an async db-api
+    should be able to do that as ONE batched remote transact instead of
+    the caller replaying `commit-record!`/`append-ledger!` calls (which
+    assume a SYNCHRONOUS db-api -- see `DatomicStore`'s own docstring)
+    against it one at a time."))
 
 ;; ----------------------------- demo data -----------------------------
 
@@ -289,7 +316,22 @@
       nil)
     s)
   (append-ledger! [_ fact] (swap! a update :ledger conj fact) fact)
-  (with-applications [s applications] (when (seq applications) (swap! a assoc :applications applications)) s))
+  (with-applications [s applications] (when (seq applications) (swap! a assoc :applications applications)) s)
+  (ledger-state [_]
+    {:ledger (:ledger @a) :commitment-history (:commitment-history @a)
+     :tranche-release-history (:tranche-release-history @a)
+     :released-tranches (:released-tranches @a {})
+     :commitment-sequences (:commitment-sequences @a {})
+     :tranche-sequences (:tranche-sequences @a {})})
+  (with-ledger-state [s {:keys [ledger commitment-history tranche-release-history
+                               released-tranches commitment-sequences tranche-sequences]}]
+    (swap! a merge {:ledger (or ledger [])
+                    :commitment-history (or commitment-history [])
+                    :tranche-release-history (or tranche-release-history [])
+                    :released-tranches (into {} (map (fn [[k v]] [k (set v)])) (or released-tranches {}))
+                    :commitment-sequences (or commitment-sequences {})
+                    :tranche-sequences (or tranche-sequences {})})
+    s))
 
 (defn seed-db
   "A MemStore seeded with the demo application set. The deterministic
@@ -318,14 +360,31 @@
                               :released-tranches {} :commitment-sequences {} :tranche-sequences {}}
                              initial-state)))))
 
-;; ----------------------------- DatomicStore (langchain.db) -----------------------------
+;; ----------------------------- DatomicStore (langchain.db, or an injected db-api) -----------------------------
 
 (def ^:private schema
   "DataScript/Datomic-style schema: only constraint attrs are declared.
   Map/compound values (personal-pledge, lender, tranche-schedule, ledger
   facts, drafts) are stored as EDN strings so `langchain.db` doesn't
   expand them into sub-entities -- the same convention every sibling
-  actor's store uses."
+  actor's store uses.
+
+  `:ledger/seq`/`:commitment/seq`/`:tranche/seq` values are ALWAYS
+  written as STRINGS (`(str (count ...))`, never a raw integer) even
+  though they are plain sequence counters -- kotobase-server's
+  `do-transact` collides EVERY `:db.unique/identity` attribute whose
+  value is a NUMBER (not a string) into entity id \"\" (empty string),
+  silently merging every ledger/commitment/tranche entry that ever hits
+  this into ONE entity on a live kotobase.net graph (confirmed against
+  production, ADR-2607184000's known-issues section; independently
+  re-confirmed against this actor's own would-be kotobase.net graph
+  before this migration -- string-valued identity attrs, e.g.
+  `:application/id`, are unaffected). This is a correctness fix that
+  applies to EVERY backend this schema is used with, not just the
+  kotobase-backed one, since the in-process default (`datomic-store`)
+  shares this exact schema/tx-builder code; the string encoding is
+  harmless there too (`parse-seq-num` below decodes it back to a number
+  wherever numeric sort/compare is needed)."
   {:application/id                {:db/unique :db.unique/identity}
    :ledger/seq                    {:db/unique :db.unique/identity}
    :commitment/seq                {:db/unique :db.unique/identity}
@@ -333,6 +392,51 @@
    :commit-sequence/jurisdiction  {:db/unique :db.unique/identity}
    :tranche-sequence/jurisdiction {:db/unique :db.unique/identity}
    :released-tranche/key          {:db/unique :db.unique/identity}})
+
+(defn- parse-seq-num
+  "A `:ledger/seq`/`:commitment/seq`/`:tranche/seq` wire value (ALWAYS a
+  string on this schema -- see schema docstring above) decoded back to a
+  number, purely for local `sort-by`/comparison purposes. Without this,
+  `(sort-by first [[\"10\" ..] [\"2\" ..]])` would sort lexicographically
+  (\"10\" before \"2\"), silently misordering the ledger/commitment/
+  tranche history once either count reaches double digits."
+  [s]
+  #?(:clj (Long/parseLong (str s))
+     :cljs (js/parseInt (str s) 10)))
+
+(defn- chain
+  "`v` is either a plain value (a SYNCHRONOUS db-api, e.g. the in-process
+  `langchain.db/api` default this ns's own `datomic-store` still uses
+  unchanged) or, under `:cljs` when `db-api` is an INJECTED async
+  backend (e.g. `langchain.kotoba-db/kotoba-api-async` pointed at a live
+  kotobase.net graph -- see `commitledger.edge.kotobase-store`), a real
+  `js/Promise`. Returns `(f v)` directly for a plain value, or a Promise
+  of `(f resolved-v)` for a Promise -- lets `application`/`all-
+  applications`/`with-applications`/`ledger-state`/`with-ledger-state`
+  below work unchanged against EITHER kind of `db-api` (this fleet's
+  edge-layer code already documents this identical duality as
+  \"promise-like\" on its own KVStore protocols, e.g.
+  `commitledger.edge.kv-store`; this is the same convention one layer
+  down). `:clj` `db-api` is always synchronous today, so `v` is never a
+  Promise there."
+  [v f]
+  #?(:cljs (if (instance? js/Promise v) (.then v f) (f v))
+     :clj  (f v)))
+
+(defn- collect-chain
+  "`[v1 v2 ...]` (each `chain`-able -- a plain value or, on `:cljs`, a
+  Promise) -> a `chain`-able of a vector of resolved values, in order.
+  The `chain`-based analog of `commitledger.edge.kv-store/collect`
+  (itself a portable `js/Promise.all` substitute over `pcompat`) -- used
+  by `all-applications`/`ledger-state` to gather N per-id/per-jurisdiction
+  remote reads into one result without this ns depending on any edge-
+  layer `pcompat`."
+  [vs]
+  (letfn [(go [vs acc]
+            (if (empty? vs)
+              acc
+              (chain (first vs) (fn [v] (go (rest vs) (conj acc v))))))]
+    (go vs [])))
 
 (defn- application->tx
   [{:keys [id borrower-org-repo borrower-did requested-principal purpose existing-debt
@@ -377,25 +481,41 @@
      :tranche-schedule (ls/dec* (:application/tranche-schedule m))
      :commitment-number (:application/commitment-number m)}))
 
-(defrecord DatomicStore [conn]
+(defrecord DatomicStore [conn db-api]
   Store
+  ;; `application`/`all-applications`/`with-applications`/`ledger-state`/
+  ;; `with-ledger-state` are `chain`-aware (work against EITHER a sync or
+  ;; an async `db-api` -- see `chain`'s own docstring): these five are
+  ;; the ONLY methods `commitledger.edge.kotobase-store`'s request-scoped
+  ;; hydrate/persist boundary calls against a REMOTE (async) db-api.
+  ;; Every other method below assumes a SYNCHRONOUS `db-api` (true of the
+  ;; in-process default `datomic-store` always uses, `langchain.db/api`)
+  ;; -- they are only ever invoked, in this actor, against the in-process
+  ;; snapshot store the StateGraph runs against per request, never
+  ;; against the remote store directly (see that ns's docstring for why:
+  ;; `langgraph.graph/run*` executes fully synchronously, so nothing it
+  ;; calls mid-graph can be a network round-trip in a Cloudflare Pages
+  ;; Function, which has no synchronous I/O primitive at all).
   (application [_ id]
-    (pull->application (d/pull (d/db conn) application-pull [:application/id id])))
+    (chain ((:pull db-api) ((:db db-api) conn) application-pull [:application/id id])
+           pull->application))
   (all-applications [_]
-    (->> (d/q '[:find [?id ...] :where [?e :application/id ?id]] (d/db conn))
-         (map #(pull->application (d/pull (d/db conn) application-pull [:application/id %])))
-         (sort-by :id)))
+    (chain ((:q db-api) '[:find [?id ...] :where [?e :application/id ?id]] ((:db db-api) conn))
+           (fn [ids]
+             (chain (collect-chain
+                     (mapv (fn [id] ((:pull db-api) ((:db db-api) conn) application-pull [:application/id id])) ids))
+                    (fn [pulls] (vec (sort-by :id (map pull->application pulls))))))))
   (ledger [_]
     (->> (d/q '[:find ?s ?f :where [?e :ledger/seq ?s] [?e :ledger/fact ?f]] (d/db conn))
-         (sort-by first)
+         (sort-by (comp parse-seq-num first))
          (mapv (comp ls/dec* second))))
   (commitment-history [_]
     (->> (d/q '[:find ?s ?r :where [?e :commitment/seq ?s] [?e :commitment/record ?r]] (d/db conn))
-         (sort-by first)
+         (sort-by (comp parse-seq-num first))
          (mapv (comp ls/dec* second))))
   (tranche-release-history [_]
     (->> (d/q '[:find ?s ?r :where [?e :tranche/seq ?s] [?e :tranche/record ?r]] (d/db conn))
-         (sort-by first)
+         (sort-by (comp parse-seq-num first))
          (mapv (comp ls/dec* second))))
   (released-tranches-of [_ application-id]
     (->> (d/q '[:find [?idx ...] :in $ ?aid :where
@@ -432,7 +552,11 @@
         (d/transact! conn
                      [(application->tx (assoc application-patch :id application-id))
                       {:commit-sequence/jurisdiction jurisdiction :commit-sequence/next next-n}
-                      {:commitment/seq (count (commitment-history s)) :commitment/record (ls/enc (get result "record"))}])
+                      ;; :commitment/seq is a :db.unique/identity attr --
+                      ;; MUST be a string, never a raw int (see schema
+                      ;; docstring: a numeric identity value collides to
+                      ;; entity id "" on kotobase-server).
+                      {:commitment/seq (str (count (commitment-history s))) :commitment/record (ls/enc (get result "record"))}])
         result)
 
       :commitment/mark-tranche-released
@@ -444,7 +568,8 @@
             rel-key (str application-id ":" tranche-index)]
         (d/transact! conn
                      [{:tranche-sequence/jurisdiction jurisdiction :tranche-sequence/next next-n}
-                      {:tranche/seq (count (tranche-release-history s)) :tranche/record (ls/enc (get result "record"))}
+                      ;; :tranche/seq -- same string-identity requirement, see above.
+                      {:tranche/seq (str (count (tranche-release-history s))) :tranche/record (ls/enc (get result "record"))}
                       {:released-tranche/key rel-key
                        :released-tranche/application-id application-id
                        :released-tranche/tranche-index tranche-index}])
@@ -452,18 +577,80 @@
       nil)
     s)
   (append-ledger! [s fact]
-    (d/transact! conn [{:ledger/seq (count (ledger s)) :ledger/fact (ls/enc fact)}])
+    ;; :ledger/seq -- same string-identity requirement, see schema docstring.
+    (d/transact! conn [{:ledger/seq (str (count (ledger s))) :ledger/fact (ls/enc fact)}])
     fact)
   (with-applications [s applications]
-    (when (seq applications) (d/transact! conn (mapv application->tx (vals applications)))) s))
+    (if (seq applications)
+      (chain ((:transact! db-api) conn (mapv application->tx (vals applications))) (fn [_] s))
+      s))
+  (ledger-state [_]
+    ;; Unlike `ledger`/`commitment-history`/`tranche-release-history`
+    ;; above (which hardcode `d/q`/`(d/db conn)`, i.e. only ever work
+    ;; against the in-process default), this method goes through
+    ;; `db-api` directly so it ALSO works when `db-api` is the async
+    ;; remote one (`commitledger.edge.kotobase-store`'s hydrate is the
+    ;; only caller that needs the async path). All 6 sub-queries are
+    ;; independent of each other (no jurisdiction/application-id needs
+    ;; to be known up front -- unlike `next-commitment-sequence`/
+    ;; `released-tranches-of`, which take a specific jurisdiction/
+    ;; application-id, these ask for EVERY entity of each kind directly),
+    ;; so they're gathered via `collect-chain` rather than nested.
+    (let [db ((:db db-api) conn)]
+      (chain (collect-chain
+              [((:q db-api) '[:find ?s ?f :where [?e :ledger/seq ?s] [?e :ledger/fact ?f]] db)
+               ((:q db-api) '[:find ?s ?r :where [?e :commitment/seq ?s] [?e :commitment/record ?r]] db)
+               ((:q db-api) '[:find ?s ?r :where [?e :tranche/seq ?s] [?e :tranche/record ?r]] db)
+               ((:q db-api) '[:find ?aid ?idx :where [?e :released-tranche/application-id ?aid] [?e :released-tranche/tranche-index ?idx]] db)
+               ((:q db-api) '[:find ?j ?n :where [?e :commit-sequence/jurisdiction ?j] [?e :commit-sequence/next ?n]] db)
+               ((:q db-api) '[:find ?j ?n :where [?e :tranche-sequence/jurisdiction ?j] [?e :tranche-sequence/next ?n]] db)])
+             (fn [[ledger-rows commitment-rows tranche-rows rel-rows commit-seq-rows tranche-seq-rows]]
+               {:ledger (->> ledger-rows (sort-by (comp parse-seq-num first)) (mapv (comp ls/dec* second)))
+                :commitment-history (->> commitment-rows (sort-by (comp parse-seq-num first)) (mapv (comp ls/dec* second)))
+                :tranche-release-history (->> tranche-rows (sort-by (comp parse-seq-num first)) (mapv (comp ls/dec* second)))
+                :released-tranches (reduce (fn [m [aid idx]] (update m aid (fnil conj #{}) idx)) {} rel-rows)
+                :commitment-sequences (into {} commit-seq-rows)
+                :tranche-sequences (into {} tranche-seq-rows)}))))
+  (with-ledger-state [s {:keys [ledger commitment-history tranche-release-history
+                                released-tranches commitment-sequences tranche-sequences]}]
+    (let [tx (cond-> []
+               true (into (map-indexed (fn [i f] {:ledger/seq (str i) :ledger/fact (ls/enc f)}) (or ledger [])))
+               true (into (map-indexed (fn [i r] {:commitment/seq (str i) :commitment/record (ls/enc r)}) (or commitment-history [])))
+               true (into (map-indexed (fn [i r] {:tranche/seq (str i) :tranche/record (ls/enc r)}) (or tranche-release-history [])))
+               true (into (mapcat (fn [[aid idxs]]
+                                     (map (fn [idx] {:released-tranche/key (str aid ":" idx)
+                                                    :released-tranche/application-id aid
+                                                    :released-tranche/tranche-index idx})
+                                          idxs))
+                                  (or released-tranches {})))
+               true (into (map (fn [[j n]] {:commit-sequence/jurisdiction j :commit-sequence/next n}) (or commitment-sequences {})))
+               true (into (map (fn [[j n]] {:tranche-sequence/jurisdiction j :tranche-sequence/next n}) (or tranche-sequences {}))))]
+      (if (seq tx)
+        (chain ((:transact! db-api) conn tx) (fn [_] s))
+        s))))
 
 (defn datomic-store
   "A DatomicStore (langchain.db backend) seeded from `data`
   ({:applications ..}); empty when omitted."
   ([] (datomic-store {}))
   ([{:keys [applications]}]
-   (let [s (->DatomicStore (d/create-conn schema))]
+   (let [s (->DatomicStore (d/create-conn schema) d/api)]
      (with-applications s applications))))
+
+(defn store-with-api
+  "`DatomicStore` backed by an INJECTED `db-api` map (`{:q :transact! :db
+  :pull :entid}` -- `langchain.db/api`'s own shape, OR an async variant
+  of it, e.g. `langchain.kotoba-db/kotoba-api-async` -- see `chain`'s
+  docstring for how this record tolerates either) + a matching `conn`,
+  instead of hardcoding `langchain.db`/`langchain.db/create-conn`. This
+  is what lets this actor's application/ledger/commitment/tranche data
+  live somewhere OTHER than an in-process atom -- e.g.
+  `langchain.kotoba-db/kotoba-api-async` + a `kotoba-conn*` pointed at a
+  live kotobase-server graph (see `commitledger.edge.kotobase-store`) --
+  mirrors `crm.store/store-with-api` (cloud-itonami-isic-5820,
+  ADR-2607184000) precisely. Does NOT seed demo data."
+  [db-api conn]
+  (->DatomicStore conn db-api))
 
 (defn datomic-seed-db
   "A DatomicStore seeded with the demo application set -- the Datomic-
