@@ -13,6 +13,17 @@ record. A LATER, separate superproject-side ADR (in
 records the decision to register this repo into the west manifest and
 fleet; that ADR references this one, not the reverse.
 
+**V2 addendum**: `docs/adr/0002-http-edge-live-registry-verification.md`
+extends this ADR additively -- an eleventh `:commitment/record` HARD
+check (`borrower-registration-not-verified-violations`, numbered 13,
+never renumbering the twelve below), an HTTP edge layer, and Cloudflare
+KV persistence. Every decision below is UNCHANGED by V2 except where
+this file explicitly marks a "V2" note inline. In particular, Decision
+7's "no live self-registration integration" is now true of the
+GOVERNOR only (it still never calls out live, synchronously or
+otherwise) -- the ACTOR as a whole now does verify live, via its edge
+layer, at intake time. See ADR-0002 for the full V2 design record.
+
 ## Context
 
 `gftdcojp/cloud-itonami`'s ADR-0013 (`docs/adr/0013-open-business-self-registration.md`)
@@ -171,17 +182,27 @@ from `credit.governor`'s ADR-0001 Decision 5 / `factoring.governor`'s
 `receivable-status-precondition-violations`, generalized here to a
 per-tranche set-membership check rather than a single status value).
 
-### Decision 7: No live self-registration integration (V1 scope)
+### Decision 7: No live self-registration integration (V1 scope) -- superseded by V2's ADR-0002
 
-`borrower-not-self-registered-violations` does NOT call out to
-`gftdcojp/cloud-itonami`'s live registry over HTTP in V1. It only
-verifies the borrower's own `:borrower-org-repo`/`:borrower-did`
-reference fields are present and well-formed
-(`commitledger.registry/borrower-ref-well-formed?`). A full
-integration would call ADR-0013's registry to confirm the reference
-actually resolves to a claimed, public tenant; that live HTTP
-integration is explicitly out of scope for V1 (see README "What this
-actor does NOT do").
+`borrower-not-self-registered-violations` (check 10) does NOT call out
+to `gftdcojp/cloud-itonami`'s live registry over HTTP -- this remains
+true, unchanged: it only ever verifies the borrower's own
+`:borrower-org-repo`/`:borrower-did` reference fields are present and
+well-formed (`commitledger.registry/borrower-ref-well-formed?`),
+synchronously, off the stored application.
+
+**V2 note**: what WAS out of scope for V1 -- confirming the reference
+actually resolves to a claimed, public ADR-0013 tenant -- is now built,
+but NOT inside the Governor (which stays pure/synchronous by design,
+see ADR-0002 Decision 2). Instead, `commitledger.edge.commitment-
+endpoints/intake-core!` (an edge HTTP handler) calls `gftdcojp/cloud-
+itonami`'s live `GET /api/open-business` ONCE, at INTAKE time, and
+stores the result as a new ground-truth field
+(`:borrower-registration-verified?`) a NEW, thirteenth HARD check
+(`borrower-registration-not-verified-violations`) then reads --
+independently of, and in addition to, check 10's well-formedness check.
+See `docs/adr/0002-http-edge-live-registry-verification.md` for the
+full design.
 
 ## Consequences
 
@@ -221,9 +242,13 @@ scope boundary, owner instruction) -- `commitledger.governor`/
 `commitledger.phase` decide directly in idiomatic `.cljc`, matching
 `factoring.governor`'s own posture.
 
-(-) No live HTTP integration into `gftdcojp/cloud-itonami`'s
+(-) ~~No live HTTP integration into `gftdcojp/cloud-itonami`'s
 self-registration registry -- `borrower-not-self-registered-
-violations` checks reference-field well-formedness only.
+violations` checks reference-field well-formedness only.~~ **Superseded
+by V2** (`docs/adr/0002-http-edge-live-registry-verification.md`): the
+actor's edge layer now verifies live, at intake time, via a new
+thirteenth check reading a new ground-truth field; check 10 itself
+(well-formedness only, inside the pure Governor) is unchanged.
 
 ## Verification
 
@@ -263,12 +288,15 @@ violations` checks reference-field well-formedness only.
 | Register under an existing/new ISIC financial-services code | ❌ | This actor is a cross-cutting matching/auxiliary layer, not an industry vertical; the relevant financial-services codes are already claimed by sibling actors and this actor does not itself grant credit, factor receivables, or hold deposits |
 | A single uniform lender safeguard set (no institutional/individual split) | ❌ | Individual lenders carry materially different regulatory risk (貸金業法's 「業として」 threshold) than licensed institutions; a single check set would either be too lax for individuals or too strict for licensed banks |
 | Treat the individual-lender loan-count threshold as a hard legal line | ❌ | No such bright line exists in the statute this actor cites; documenting it honestly as a conservative proxy avoids implying unearned legal certainty |
-| Live HTTP integration into `gftdcojp/cloud-itonami`'s self-registration registry | ❌ (deferred) | Out of scope for V1 per the task's explicit boundary; reference-field well-formedness is the V1 substitute, documented as such |
+| Live HTTP integration into `gftdcojp/cloud-itonami`'s self-registration registry | ❌ (deferred, **V1 only** -- built in V2, see ADR-0002) | Out of scope for V1 per the task's explicit boundary; reference-field well-formedness was the V1 substitute. V2 builds it additively at the EDGE layer, not inside the Governor -- see `docs/adr/0002-http-edge-live-registry-verification.md` Decision 2 |
 | A `kernels/gate.cljc` WASM safety-kernel twin (following `credit.governor`'s pattern) | ❌ | Explicit V1 scope boundary (owner instruction: no WASM twin); `factoring.governor`'s idiomatic-`.cljc`, no-kernel posture is the followed precedent instead |
 | A single actuation (record only, no separate tranche-release) | ❌ | The task specifies staged/tranche-based capital release gated on milestone evidence -- a single actuation cannot express "release only after evidence of progress," the core mechanism connecting the personal pledge to the disbursement schedule |
 
 ## References
 
+- `docs/adr/0002-http-edge-live-registry-verification.md` (this repo,
+  LATER) -- V2's HTTP edge layer + live borrower-registration
+  verification (check 13), additive to everything in this ADR.
 - `gftdcojp/cloud-itonami` ADR-0013 (`docs/adr/0013-open-business-self-registration.md`) --
   third-party self-registration, the borrower identity this actor's
   `:borrower-org-repo`/`:borrower-did` fields reference.

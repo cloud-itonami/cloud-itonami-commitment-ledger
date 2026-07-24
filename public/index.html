@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>cloud-itonami-commitment-ledger</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+<h1>cloud-itonami-commitment-ledger</h1>
+<p>
+  Commitment-LLM &#8871; CommitmentLedgerGovernor -- a governed,
+  loan-based commitment-matching actor bridging self-registered
+  businesses (<a href="https://github.com/gftdcojp/cloud-itonami/blob/main/docs/adr/0013-open-business-self-registration.md">ADR-0013</a>)
+  to institutional/individual lenders. This deploy exposes only the V2
+  HTTP API (<code>/api/commitment/*</code>) -- see
+  <a href="https://github.com/cloud-itonami/cloud-itonami-commitment-ledger">the source repository</a>
+  for the full README/ADR.
+</p>
+<h2>API</h2>
+<ul>
+  <li><code>POST /api/commitment/intake</code> -- CACAO-gated (borrower resource-scope)</li>
+  <li><code>POST /api/commitment/record?id={id}</code> -- CACAO-gated (lender identity)</li>
+  <li><code>POST /api/commitment/tranche-release?id={id}</code> -- CACAO-gated (lender identity)</li>
+  <li><code>GET /api/commitment/{id}</code> -- public, read-only</li>
+</ul>
+</body>
+</html>

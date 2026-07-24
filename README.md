@@ -77,7 +77,7 @@ docstring and `test/commitledger/phase_test.cljc`. The actor may draft,
 check and recommend; a human platform operator is always the one who
 actually authorizes.
 
-## The ten `:commitment/record` HARD checks
+## The eleven `:commitment/record` HARD checks
 
 1. `spec-basis-missing?` -- jurisdiction spec-basis citation absent.
 2. `institutional-lender-license-not-verified?` -- `:lender/type
@@ -113,10 +113,20 @@ actually authorizes.
    `:progress-report-obligation`) missing/blank. **This actor's own
    DISTINCTIVE check** -- see `docs/adr/0001-architecture.md`.
 10. `borrower-not-self-registered?` -- the borrower `org/repo` + did:key
-    reference fields are missing/malformed. V1: reference-field
-    well-formedness only -- **no live HTTP integration** into
-    `gftdcojp/cloud-itonami`'s registry (see "What this actor does NOT
-    do" below).
+    reference fields are missing/malformed. Reference-field
+    well-formedness only -- independent of, and always required
+    alongside, check 13 below.
+
+Plus one more check, added additively in V2 (**numbered 13, not 11 --
+never renumbered**, since it was appended after the two `:commitment/
+tranche-release` checks below, which already occupied 11/12 before V2):
+
+13. `borrower-registration-not-verified?` -- `:borrower-registration-
+    verified?`, a ground-truth field set at INTAKE time by a LIVE `GET
+    /api/open-business` call against `gftdcojp/cloud-itonami`'s public
+    registry (see `docs/adr/0002-http-edge-live-registry-verification.md`),
+    is not `true`. See "V2: HTTP edge + live registry verification"
+    below.
 
 Plus TWO more HARD checks gate `:commitment/tranche-release`:
 `tranche-release-precondition-violations` (application must be
@@ -130,10 +140,20 @@ membership double-release guard, never inferred from `:status`).
   custody, no payment-gateway/processor integration anywhere in this
   codebase. Actual disbursement is delegated to `cloud-itonami-isic-
   6492`/`cloud-itonami-isic-6419`/external rails.
-- Does NOT call out to `gftdcojp/cloud-itonami`'s live self-
-  registration registry (ADR-0013) over HTTP -- `borrower-not-self-
-  registered-violations` only verifies reference-field well-formedness
-  in V1.
+- The Governor itself still never calls out to `gftdcojp/cloud-
+  itonami`'s live registry (ADR-0013) -- `borrower-not-self-registered-
+  violations` (check 10) only ever verifies reference-field
+  well-formedness, synchronously, off the stored application, exactly
+  as before. **V2 (see below) DOES verify the borrower's self-
+  registration claim against the live registry** -- but that HTTP call
+  happens once, at INTAKE time, in the edge handler
+  (`commitledger.edge.commitment-endpoints/intake-core!`), which stores
+  the boolean result as a permanent ground-truth field
+  (`:borrower-registration-verified?`) the Governor's new check 13 then
+  reads synchronously, the same way it reads every other stored field.
+  This is a point-in-time check at intake, not re-verified before
+  `:commitment/record` itself runs -- see `docs/adr/0002-http-edge-
+  live-registry-verification.md`.
 - Does NOT model investment/equity in any form (V1 scope: lending
   only, per explicit owner instruction) -- any equity/dividend/cap-
   table language in a free-text field is a HARD violation.
@@ -155,7 +175,7 @@ self-registered application + jurisdiction facts (commitledger.facts, spec-cited
         v
    ┌───────────────┐   proposal      ┌──────────────────────────┐
    │ Commitment-LLM │ ─────────────▶ │ CommitmentLedgerGovernor  │  (independent system)
-   │  (sealed)      │  + citations    │ 10 :commitment/record      │
+   │  (sealed)      │  + citations    │ 11 :commitment/record      │
    └───────────────┘                 │ checks + 2 :tranche-release  │
                              commit ◀────┼──────────▶ hold │ checks (spec-basis ·      │
                                  │             │           │ license · rate-ceiling ·    │
@@ -195,19 +215,67 @@ services, `6611`/`6612` fund/security management) are already claimed by
 sibling actors in this fleet. See `docs/adr/0001-architecture.md` for
 the full reasoning.
 
+## V2: HTTP edge + live registry verification
+
+Turns the library above into a reachable Cloudflare Pages HTTP service,
+with a REAL (not merely well-formed-looking) borrower-registration
+check -- see `docs/adr/0002-http-edge-live-registry-verification.md`
+for the full design record. Summary:
+
+- **13th HARD check** (`borrower-registration-not-verified-violations`,
+  `commitledger.governor`) -- additive, appended (never renumbered).
+  Reads a NEW ground-truth field, `:borrower-registration-verified?`,
+  set at INTAKE time by a live, unauthenticated `GET /api/open-business`
+  call against `gftdcojp/cloud-itonami`'s public registry
+  (`commitledger.edge.registrylookup`). The Governor itself stays pure/
+  synchronous -- it never calls out live, it only reads the stored
+  boolean, exactly like every other check.
+- **4 HTTP handlers** (`commitledger.edge.commitment-endpoints`):
+  `POST .../commitment/intake` (CACAO-gated, borrower resource-scope),
+  `POST .../commitment/record?id=` (CACAO-gated, lender-identity match),
+  `POST .../commitment/tranche-release?id=` (same), `GET .../commitment/{id}`
+  (public, redacts `:lender/id`/`:borrower-did`).
+- **CACAO auth** (`commitledger.edge.{cacao,base58,cbor}.cljc`) -- direct,
+  faithful ports of `gftdcojp/cloud-itonami`'s own edge crypto/wire-format
+  files (AGPL-3.0-or-later, license-compatible), mirroring this repo's
+  own pre-existing `equity-blocklist` local-mirror convention.
+- **Cloudflare KV persistence** (`commitledger.edge.kv-store`) --
+  HTTP-request-scoped only, separate from (does not replace)
+  `commitledger.store`'s `MemStore`/`DatomicStore`.
+- **Portable injection seams throughout** (`Lookup`/`KVStore`/
+  `CacaoVerifier` protocols, `commitledger.edge.pcompat`'s async seam)
+  so every edge-layer core-logic fn is directly testable under the SAME
+  `clojure -M:dev:test` JVM runner as the rest of this repo -- no second
+  CLJS-only test toolchain introduced.
+
+Run/deploy (see `shadow-cljs.edn`'s `:edge-api` build, `wrangler.jsonc`):
+
+```bash
+npx shadow-cljs release edge-api                        # compiles functions/edge/commitment-edge-core.js
+wrangler pages deploy public --project-name=cloud-itonami-commitment-ledger
+```
+
 ## Layout
 
 | File | Role |
 |---|---|
-| `src/commitledger/store.cljc` | **Store** protocol -- `MemStore` \| `DatomicStore` (`langchain.db`) + append-only audit ledger + commitment/tranche-release draft histories + the dedicated `tranche-already-released?` double-actuation guard |
+| `src/commitledger/store.cljc` | **Store** protocol -- `MemStore` \| `DatomicStore` (`langchain.db`) + append-only audit ledger + commitment/tranche-release draft histories + the dedicated `tranche-already-released?` double-actuation guard + `empty-store` (V2's KV-rehydration seam) |
 | `src/commitledger/registry.cljc` | Draft-record construction, `rate-ceiling-for-principal` (利息制限法 tiers), `compute-capacity-ratio`, `equity-blocklist`, `personal-pledge-required-fields`, `borrower-ref-well-formed?` -- pure ground-truth calculations |
 | `src/commitledger/facts.cljc` | Per-jurisdiction lending spec-basis catalog with an official citation per entry, honest coverage reporting |
 | `src/commitledger/advisor.cljc` | **Commitment-LLM Advisor** -- `mock-advisor` \| `llm-advisor`; intake/matched-commitment/tranche-release proposals |
-| `src/commitledger/governor.cljc` | **CommitmentLedgerGovernor** -- 10 `:commitment/record` HARD checks + 2 `:commitment/tranche-release` HARD checks + 1 soft (confidence/actuation gate) |
+| `src/commitledger/governor.cljc` | **CommitmentLedgerGovernor** -- 11 `:commitment/record` HARD checks + 2 `:commitment/tranche-release` HARD checks + 1 soft (confidence/actuation gate) |
 | `src/commitledger/phase.cljc` | **Phase 0→3** -- read-only → assisted intake → supervised (both actuations always human; application intake is the ONLY auto-eligible op, no capital risk) |
 | `src/commitledger/operation.cljc` | **OperationActor** -- langgraph-clj StateGraph, one graph drives both actuations |
 | `src/commitledger/sim.cljc` | demo driver |
-| `test/commitledger/*_test.cljc` | governor contract (all 12 checks, one test each) · phase invariants · store parity · registry conformance · advisor/operation smoke |
+| `src/commitledger/edge/pcompat.cljc` | V2 -- portable async seam (`resolved`/`then`) shared by every edge ns below |
+| `src/commitledger/edge/registrylookup.cljc` | V2 -- `Lookup` protocol, `LiveLookup` (real `GET /api/open-business`) \| `MockLookup` |
+| `src/commitledger/edge/kv_codec.cljc` | V2 -- pure application/ledger-state <-> JSON-safe map codec |
+| `src/commitledger/edge/kv_store.cljc` | V2 -- `KVStore` protocol, `CloudflareKVStore` \| `mem-kv-store`, + `load-store`/`save-store!` |
+| `src/commitledger/edge/auth.cljc` | V2 -- portable CACAO-gating core (`CacaoVerifier` protocol, resource-scope + lender-identity checks) |
+| `src/commitledger/edge/{cacao,base58,cbor}.cljc` | V2 -- ported CACAO verify + wire format (CLJS-only, faithful port of `cloud_itonami.edge.*`) |
+| `src/commitledger/edge/commitment_endpoints.cljc` | V2 -- the 4 HTTP handlers |
+| `test/commitledger/*_test.cljc` | governor contract (all 13 checks, one test each) · phase invariants · store parity · registry conformance · advisor/operation smoke |
+| `test/commitledger/edge/*_test.cljc` | V2 -- registrylookup/kv-codec/kv-store/auth/commitment-endpoints, all portable (Mock/Mem, no network/crypto) |
 
 ## Jurisdiction coverage (honest)
 
@@ -225,7 +293,8 @@ coverage look bigger.
 `:implemented` -- `Commitment-LLM` + `CommitmentLedgerGovernor` run as
 real, tested code (see `Run` above), modeled closely on the two nearest
 prior actors' architecture. See `docs/adr/0001-architecture.md` for the
-full design record.
+full design record and `docs/adr/0002-http-edge-live-registry-
+verification.md` for V2's HTTP edge + live registry verification.
 
 ## License
 

@@ -13,23 +13,26 @@
   the lending-matchmaking analog of `credit.governor` (`cloud-itonami-
   isic-6492`) and `factoring.governor` (`cloud-itonami-isic-6493`).
 
-  Ten HARD checks gate `:commitment/record` (the first actuation --
-  matching + committing a loan-based commitment), plus TWO more HARD
-  checks gate `:commitment/tranche-release` (the second, independent
-  actuation -- releasing the next tranche against an already-committed
-  commitment, mirroring `cloud-itonami-isic-6493`'s two-actuation
-  `:advance/fund`/`:reserve/settle` shape and its own `receivable-
-  status-precondition-violations`/`double-advance-violations`/`double-
-  settle-violations` pattern). ALL HARD violations: a human approver
-  CANNOT override them. The confidence/actuation gate is SOFT: it asks
-  a human to look -- but see `commitledger.phase`: for `:stake
-  :actuation/commitment-record` and `:stake :actuation/tranche-release`
-  NO phase ever allows auto-commit either. Two independent layers agree
-  that actuation is always a human call. This actor does NOT move money
-  itself -- see README `Actuation`: disbursement is delegated to
-  `cloud-itonami-isic-6492`/`cloud-itonami-isic-6419`/external rails.
+  ELEVEN HARD checks gate `:commitment/record` (the first actuation --
+  matching + committing a loan-based commitment: the original ten plus
+  V2's `borrower-registration-not-verified-violations`, check 13, added
+  additively -- see `docs/adr/0002-http-edge-live-registry-
+  verification.md`), plus TWO more HARD checks gate `:commitment/
+  tranche-release` (the second, independent actuation -- releasing the
+  next tranche against an already-committed commitment, mirroring
+  `cloud-itonami-isic-6493`'s two-actuation `:advance/fund`/`:reserve/
+  settle` shape and its own `receivable-status-precondition-violations`/
+  `double-advance-violations`/`double-settle-violations` pattern). ALL
+  HARD violations: a human approver CANNOT override them. The
+  confidence/actuation gate is SOFT: it asks a human to look -- but see
+  `commitledger.phase`: for `:stake :actuation/commitment-record` and
+  `:stake :actuation/tranche-release` NO phase ever allows auto-commit
+  either. Two independent layers agree that actuation is always a human
+  call. This actor does NOT move money itself -- see README `Actuation`:
+  disbursement is delegated to `cloud-itonami-isic-6492`/`cloud-itonami-
+  isic-6419`/external rails.
 
-  ## The ten `:commitment/record` HARD checks
+  ## The eleven `:commitment/record` HARD checks
 
     1. `spec-basis-missing-violations`                       -- jurisdiction spec-basis citation absent.
     2. `institutional-lender-license-not-verified-violations` -- `:lender/type :institutional` and `:lender/license-verified` not true.
@@ -40,7 +43,8 @@
     7. `capacity-ratio-exceeded-violations`                       -- `(existing-debt + requested-principal) / (annual-income | declared-repayment-capacity)` exceeds `commitledger.registry/capacity-ratio-ceiling`.
     8. `equity-language-detected-violations`                      -- the `:purpose` free-text field matches `commitledger.registry/equity-blocklist`.
     9. `personal-pledge-incomplete-violations`                    -- ANY required `:personal-pledge` field missing/blank. **This actor's own DISTINCTIVE check**, per this fleet's convention that every actor's ADR names its own novel contribution (see `docs/adr/0001-architecture.md`).
-   10. `borrower-not-self-registered-violations`                  -- the borrower `:borrower-org-repo`/`:borrower-did` reference fields are missing/malformed (V1: reference-field well-formedness only, no live HTTP call into `gftdcojp/cloud-itonami`'s registry -- see README).
+   10. `borrower-not-self-registered-violations`                  -- the borrower `:borrower-org-repo`/`:borrower-did` reference fields are missing/malformed (reference-field well-formedness -- ALWAYS required, independent of check 13 below).
+   13. `borrower-registration-not-verified-violations`             -- `:borrower-registration-verified?` (a permanent ground-truth field set at INTAKE time by `commitledger.edge.commitment-endpoints`'s live `GET /api/open-business` lookup against `gftdcojp/cloud-itonami`'s registry, `commitledger.edge.registrylookup`) is not `true` (V2 -- see `docs/adr/0002-http-edge-live-registry-verification.md`. Numbered 13, not 11, because it is APPENDED after the two `:commitment/tranche-release` checks below, which kept their original numbers 11/12 when this was added).
 
   ## The two `:commitment/tranche-release` HARD checks
 
@@ -248,6 +252,36 @@
         [{:rule :borrower-not-self-registered
           :detail (str subject " の借り手参照(org/repo + did:key)が欠落/不整形。自己登録(ADR-0013)済みの参照として扱えない")}]))))
 
+;; ----------------------------- V2: live borrower-registration verification -----------------------------
+
+(defn- borrower-registration-not-verified-violations
+  "For `:commitment/record`, `:borrower-registration-verified?` must be
+  `true` on the application's own stored map. This field is set at
+  INTAKE time by `commitledger.edge.commitment-endpoints`'s live `GET
+  /api/open-business` lookup against `gftdcojp/cloud-itonami`'s public
+  registry (`commitledger.edge.registrylookup`, ADR-0009 there) --
+  exactly like every other check in this file, the Governor here only
+  READS a permanent ground-truth field already on the stored
+  application; it never calls out to the registry itself, and `check`
+  (below) stays pure/synchronous. This is INDEPENDENT of check 10
+  (`borrower-not-self-registered-violations`, reference-field
+  well-formedness): a well-formed-but-never-verified reference (a typo'd
+  org/repo, or one whose owner never actually claimed ADR-0013
+  self-registration) still fails HERE even when well-formedness alone
+  would have let it through. A point-in-time check at intake -- not
+  re-verified before `:commitment/record` itself runs, should the
+  borrower's registration status change in between (see `docs/adr/0002-
+  http-edge-live-registry-verification.md`'s Consequences). Check 13."
+  [{:keys [op subject]} st]
+  (when (contains? record-checked-ops op)
+    (let [a (store/application st subject)]
+      (when-not (true? (:borrower-registration-verified? a))
+        [{:rule :borrower-registration-not-verified
+          :detail (str subject " の借り手 (" (:borrower-org-repo a)
+                       ") は intake 時点で gftdcojp/cloud-itonami の公開レジストリ (GET /api/open-business) に "
+                       "selfRegistered=true として存在確認できなかった (borrower-registration-verified?="
+                       (pr-str (:borrower-registration-verified? a)) ")")}]))))
+
 ;; ----------------------------- tranche-release checks (actuation 2) -----------------------------
 
 (defn- tranche-release-precondition-violations
@@ -313,7 +347,8 @@
                           (personal-pledge-incomplete-violations request st)
                           (borrower-not-self-registered-violations request st)
                           (tranche-release-precondition-violations request st)
-                          (tranche-already-released-violations request st)]
+                          (tranche-already-released-violations request st)
+                          (borrower-registration-not-verified-violations request st)]
         hard (into [] (apply concat violation-lists))
         conf (:confidence proposal 0.0)
         stakes? (boolean (high-stakes (:stake proposal)))]

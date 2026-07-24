@@ -199,6 +199,34 @@
 ;; ----------------------------- check 12: tranche-already-released -----------------------------
 ;; (covered end-to-end by tranche-release-clean-path-commits-then-double-release-is-held above)
 
+;; ----------------------------- check 13: borrower-registration-not-verified (V2) -----------------------------
+
+(deftest check-13-borrower-registration-not-verified-is-held
+  (testing ":borrower-registration-verified? false (the live GET /api/open-business lookup, at
+            intake time, did not find this borrower as a claimed ADR-0013 tenant) -> HOLD, never
+            reaches a human -- independent of check 10's reference-field well-formedness, which
+            this fixture passes (a well-formed but never-actually-verified reference)"
+    (let [[db actor] (fresh)
+          res (exec-op actor "t18" {:op :commitment/record :subject "app-registration-unverified"} operator)]
+      (is (= :hold (get-in res [:state :disposition])))
+      (is (not= :interrupted (:status res)))
+      (is (some #{:borrower-registration-not-verified} (-> (store/ledger db) first :basis)))
+      (is (false? (store/application-already-committed? db "app-registration-unverified"))))))
+
+(deftest check-13-borrower-registration-verified-true-does-not-block-an-otherwise-clean-record
+  (testing "the positive case: app-clean already carries :borrower-registration-verified? true
+            (set in demo-data, mirroring what a real intake would have set from a live lookup
+            that found the borrower claimed) and reaches human approval + commits exactly like
+            every other clean :commitment/record proposal -- check 13 does not fire and does not
+            block it (same end-to-end path clean-intake-auto-commits/commitment-record-always-
+            needs-approval-then-commits above already prove for the OTHER eleven checks)"
+    (let [[db actor] (fresh)
+          res (exec-op actor "t19" {:op :commitment/record :subject "app-clean"} operator)]
+      (is (= :interrupted (:status res)) "governor-clean -> escalates to approval, same as before V2")
+      (let [r2 (approve! actor "t19")]
+        (is (= :commit (get-in r2 [:state :disposition])))
+        (is (= :committed (:status (store/application db "app-clean"))))))))
+
 ;; ----------------------------- write-only-through-ledger -----------------------------
 
 (deftest every-decision-leaves-one-ledger-fact

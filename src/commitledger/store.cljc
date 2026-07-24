@@ -82,7 +82,18 @@
   tranche releases); every other application is seeded to independently
   trigger exactly ONE HARD check, matching `credit.store`'s/`factoring.
   store`'s own `demo-data` convention of one dedicated failure-mode
-  fixture per check."
+  fixture per check.
+
+  Every application below carries `:borrower-registration-verified?
+  true` -- V2's ground-truth field for check 13
+  (`commitledger.governor/borrower-registration-not-verified-
+  violations`), written at INTAKE time by
+  `commitledger.edge.commitment-endpoints`'s live `GET /api/open-
+  business` lookup against `gftdcojp/cloud-itonami`'s registry (see
+  `commitledger.edge.registrylookup`) -- EXCEPT `app-registration-
+  unverified`, the dedicated one-fixture-per-check fixture for THIS
+  check, which carries `false`. This is data only, never governor
+  logic: every other check's own fixture is unaffected."
   []
   {:applications
    {"app-clean"
@@ -91,14 +102,14 @@
      :existing-debt 100000 :annual-income 3000000 :declared-repayment-capacity nil
      :proposed-term-months 12 :personal-pledge complete-pledge
      :lender institutional-lender :proposed-rate 0.15 :jurisdiction "JPN" :status :intake
-     :tranche-schedule [150000 150000]}
+     :tranche-schedule [150000 150000] :borrower-registration-verified? true}
 
     "app-no-spec"
     {:id "app-no-spec" :borrower-org-repo "acme/no-spec-biz" :borrower-did "did:key:z6MkNoSpec01"
      :requested-principal 300000 :purpose "working capital" :existing-debt 100000 :annual-income 3000000
      :proposed-term-months 12 :personal-pledge complete-pledge
      :lender institutional-lender :proposed-rate 0.15 :jurisdiction "ATL" :status :intake
-     :tranche-schedule [300000]}
+     :tranche-schedule [300000] :borrower-registration-verified? true}
 
     "app-unlicensed"
     {:id "app-unlicensed" :borrower-org-repo "acme/unlicensed-biz" :borrower-did "did:key:z6MkUnlicensed01"
@@ -106,14 +117,14 @@
      :proposed-term-months 12 :personal-pledge complete-pledge
      :lender (assoc institutional-lender :lender/license-verified false)
      :proposed-rate 0.15 :jurisdiction "JPN" :status :intake
-     :tranche-schedule [300000]}
+     :tranche-schedule [300000] :borrower-registration-verified? true}
 
     "app-rate-exceeded"
     {:id "app-rate-exceeded" :borrower-org-repo "acme/rate-exceeded-biz" :borrower-did "did:key:z6MkRateExceeded01"
      :requested-principal 300000 :purpose "working capital" :existing-debt 100000 :annual-income 3000000
      :proposed-term-months 12 :personal-pledge complete-pledge
      :lender institutional-lender :proposed-rate 0.25 :jurisdiction "JPN" :status :intake
-     :tranche-schedule [300000]}
+     :tranche-schedule [300000] :borrower-registration-verified? true}
 
     "app-individual-interest"
     {:id "app-individual-interest" :borrower-org-repo "acme/individual-interest-biz" :borrower-did "did:key:z6MkIndividualInterest01"
@@ -121,7 +132,7 @@
      :proposed-term-months 6 :personal-pledge complete-pledge
      :lender {:lender/type :individual :lender/id "did:key:z6MkIndividualLenderA" :lender/license-verified false}
      :proposed-rate 0.05 :jurisdiction "JPN" :status :intake
-     :tranche-schedule [80000]}
+     :tranche-schedule [80000] :borrower-registration-verified? true}
 
     "app-individual-cap"
     {:id "app-individual-cap" :borrower-org-repo "acme/individual-cap-biz" :borrower-did "did:key:z6MkIndividualCap01"
@@ -129,7 +140,7 @@
      :proposed-term-months 6 :personal-pledge complete-pledge
      :lender {:lender/type :individual :lender/id "did:key:z6MkIndividualLenderB" :lender/license-verified false}
      :proposed-rate 0.0 :jurisdiction "JPN" :status :intake
-     :tranche-schedule [150000]}
+     :tranche-schedule [150000] :borrower-registration-verified? true}
 
     "app-individual-repeat-1"
     {:id "app-individual-repeat-1" :borrower-org-repo "acme/individual-repeat-biz-1" :borrower-did "did:key:z6MkIndividualRepeat01"
@@ -137,7 +148,7 @@
      :proposed-term-months 6 :personal-pledge complete-pledge
      :lender {:lender/type :individual :lender/id "did:key:z6MkIndividualLenderRepeat" :lender/license-verified false}
      :proposed-rate 0.0 :jurisdiction "JPN" :status :intake
-     :tranche-schedule [50000]}
+     :tranche-schedule [50000] :borrower-registration-verified? true}
 
     "app-individual-repeat-2"
     {:id "app-individual-repeat-2" :borrower-org-repo "acme/individual-repeat-biz-2" :borrower-did "did:key:z6MkIndividualRepeat02"
@@ -145,7 +156,7 @@
      :proposed-term-months 6 :personal-pledge complete-pledge
      :lender {:lender/type :individual :lender/id "did:key:z6MkIndividualLenderRepeat" :lender/license-verified false}
      :proposed-rate 0.0 :jurisdiction "JPN" :status :intake
-     :tranche-schedule [50000]}
+     :tranche-schedule [50000] :borrower-registration-verified? true}
 
     "app-individual-repeat-3"
     {:id "app-individual-repeat-3" :borrower-org-repo "acme/individual-repeat-biz-3" :borrower-did "did:key:z6MkIndividualRepeat03"
@@ -153,7 +164,7 @@
      :proposed-term-months 6 :personal-pledge complete-pledge
      :lender {:lender/type :individual :lender/id "did:key:z6MkIndividualLenderRepeat" :lender/license-verified false}
      :proposed-rate 0.0 :jurisdiction "JPN" :status :intake
-     :tranche-schedule [50000]}
+     :tranche-schedule [50000] :borrower-registration-verified? true}
 
     "app-individual-repeat-4"
     {:id "app-individual-repeat-4" :borrower-org-repo "acme/individual-repeat-biz-4" :borrower-did "did:key:z6MkIndividualRepeat04"
@@ -161,14 +172,14 @@
      :proposed-term-months 6 :personal-pledge complete-pledge
      :lender {:lender/type :individual :lender/id "did:key:z6MkIndividualLenderRepeat" :lender/license-verified false}
      :proposed-rate 0.0 :jurisdiction "JPN" :status :intake
-     :tranche-schedule [50000]}
+     :tranche-schedule [50000] :borrower-registration-verified? true}
 
     "app-capacity-exceeded"
     {:id "app-capacity-exceeded" :borrower-org-repo "acme/capacity-exceeded-biz" :borrower-did "did:key:z6MkCapacityExceeded01"
      :requested-principal 900000 :purpose "working capital" :existing-debt 800000 :annual-income 3000000
      :proposed-term-months 12 :personal-pledge complete-pledge
      :lender institutional-lender :proposed-rate 0.15 :jurisdiction "JPN" :status :intake
-     :tranche-schedule [900000]}
+     :tranche-schedule [900000] :borrower-registration-verified? true}
 
     "app-equity-language"
     {:id "app-equity-language" :borrower-org-repo "acme/equity-language-biz" :borrower-did "did:key:z6MkEquityLanguage01"
@@ -176,21 +187,28 @@
      :existing-debt 100000 :annual-income 3000000
      :proposed-term-months 12 :personal-pledge complete-pledge
      :lender institutional-lender :proposed-rate 0.15 :jurisdiction "JPN" :status :intake
-     :tranche-schedule [300000]}
+     :tranche-schedule [300000] :borrower-registration-verified? true}
 
     "app-pledge-incomplete"
     {:id "app-pledge-incomplete" :borrower-org-repo "acme/pledge-incomplete-biz" :borrower-did "did:key:z6MkPledgeIncomplete01"
      :requested-principal 300000 :purpose "working capital" :existing-debt 100000 :annual-income 3000000
      :proposed-term-months 12 :personal-pledge (dissoc complete-pledge :mentor-checkin-commitment)
      :lender institutional-lender :proposed-rate 0.15 :jurisdiction "JPN" :status :intake
-     :tranche-schedule [300000]}
+     :tranche-schedule [300000] :borrower-registration-verified? true}
 
     "app-borrower-missing"
     {:id "app-borrower-missing" :borrower-org-repo "" :borrower-did nil
      :requested-principal 300000 :purpose "working capital" :existing-debt 100000 :annual-income 3000000
      :proposed-term-months 12 :personal-pledge complete-pledge
      :lender institutional-lender :proposed-rate 0.15 :jurisdiction "JPN" :status :intake
-     :tranche-schedule [300000]}}})
+     :tranche-schedule [300000] :borrower-registration-verified? true}
+
+    "app-registration-unverified"
+    {:id "app-registration-unverified" :borrower-org-repo "acme/registration-unverified-biz" :borrower-did "did:key:z6MkRegistrationUnverified01"
+     :requested-principal 300000 :purpose "working capital" :existing-debt 100000 :annual-income 3000000
+     :proposed-term-months 12 :personal-pledge complete-pledge
+     :lender institutional-lender :proposed-rate 0.15 :jurisdiction "JPN" :status :intake
+     :tranche-schedule [300000] :borrower-registration-verified? false}}})
 
 ;; ----------------------------- shared commit logic -----------------------------
 
@@ -280,6 +298,25 @@
   (->MemStore (atom (assoc (demo-data)
                             :ledger [] :commitment-history [] :tranche-release-history []
                             :released-tranches {} :commitment-sequences {} :tranche-sequences {}))))
+
+(defn empty-store
+  "A MemStore with NO seeded applications -- the same empty internal
+  shape `seed-db` starts from before `demo-data` is merged in, optionally
+  overlaid with a partial `initial-state` map (`:applications`/`:ledger`/
+  `:commitment-history`/`:tranche-release-history`/`:released-tranches`/
+  `:commitment-sequences`/`:tranche-sequences` -- any subset). Used by
+  `commitledger.edge.commitment-endpoints` to reconstruct a fresh, real
+  (non-demo) Store per HTTP request from whatever `commitledger.edge.kv-
+  store` loaded out of Cloudflare KV (see that ns's own docstring: the
+  edge KV layer is a separate, HTTP-request-scoped persistence boundary,
+  not a replacement for this Store protocol -- this constructor is the
+  seam between the two, exactly as `with-applications` already is for
+  seeding)."
+  ([] (empty-store {}))
+  ([initial-state]
+   (->MemStore (atom (merge {:applications {} :ledger [] :commitment-history [] :tranche-release-history []
+                              :released-tranches {} :commitment-sequences {} :tranche-sequences {}}
+                             initial-state)))))
 
 ;; ----------------------------- DatomicStore (langchain.db) -----------------------------
 
