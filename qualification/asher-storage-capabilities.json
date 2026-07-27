@@ -1,0 +1,10 @@
+{
+  "format": "kototama.resident-capabilities/v1",
+  "storage": {
+    "endpoint": "http://127.0.0.1:18921/v1/storage",
+    "max-request-bytes": 65536,
+    "max-write-bytes": 65536,
+    "deadline-ms": 10000,
+    "audit-id": "commitment-kotobase-v1"
+  }
+}
