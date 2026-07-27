@@ -466,19 +466,31 @@
    :application/personal-pledge :application/lender :application/proposed-rate
    :application/jurisdiction :application/status :application/tranche-schedule :application/commitment-number])
 
+(defn- decode-application-blob
+  "Decode legacy EDN-string blobs while accepting values already decoded by
+  langchain.kotoba-db's normalized pull boundary."
+  [v]
+  (if (string? v) (ls/dec* v) v))
+
 (defn- pull->application [m]
-  (when (:application/id m)
+  ;; Kotobase stores the lookup-ref value as the entity id rather than as an
+  ;; attribute. langchain.kotoba-db therefore backfills :application/id for
+  ;; lookup-ref pulls, including an empty pull for a missing entity. Require at
+  ;; least one real stored attribute so that the latter remains a nil lookup.
+  (when (and (:application/id m)
+             (some (fn [attr] (some? (get m attr)))
+                   (remove #{:application/id} application-pull)))
     {:id (:application/id m) :borrower-org-repo (:application/borrower-org-repo m)
      :borrower-did (:application/borrower-did m)
      :requested-principal (:application/requested-principal m) :purpose (:application/purpose m)
      :existing-debt (:application/existing-debt m) :annual-income (:application/annual-income m)
      :declared-repayment-capacity (:application/declared-repayment-capacity m)
      :proposed-term-months (:application/proposed-term-months m)
-     :personal-pledge (ls/dec* (:application/personal-pledge m))
-     :lender (ls/dec* (:application/lender m))
+     :personal-pledge (decode-application-blob (:application/personal-pledge m))
+     :lender (decode-application-blob (:application/lender m))
      :proposed-rate (:application/proposed-rate m)
      :jurisdiction (:application/jurisdiction m) :status (:application/status m)
-     :tranche-schedule (ls/dec* (:application/tranche-schedule m))
+     :tranche-schedule (decode-application-blob (:application/tranche-schedule m))
      :commitment-number (:application/commitment-number m)}))
 
 (defrecord DatomicStore [conn db-api]
