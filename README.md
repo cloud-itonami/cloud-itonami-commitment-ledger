@@ -50,6 +50,28 @@ clojure -M:component compile src/commitledger/advisor.kotoba \
   --output dist/commitment-advisor.component.wasm
 ```
 
+## Kotoba Component HTTP boundary
+
+`src/commitledger/isic6492_intake.kotoba` is a separate HTTP-only Component
+for the existing isic-6492 intake effect. It cannot choose a URL, add
+credentials or access WASI. The guest supplies only a JSON domain payload and
+a timeout narrower than the grant. The loopback provider owns the exact
+isic-6492 origin, CACAO actor identity, outbound TLS, and request/response
+bounds.
+
+The service is intentionally separate from the LLM advisor:
+`murakumo.isic6492.component.edn` grants only `http/post` and places it on
+port 18913; the credential-bearing provider listens only on loopback port
+18920. Build the two artifacts with:
+
+```sh
+clojure -M:component compile src/commitledger/isic6492_intake.kotoba \
+  --target component --policy isic6492-component-policy.edn \
+  --fuel 100000 --memory-pages 16 \
+  --output dist/commitment-isic6492-intake.component.wasm
+npm run build-isic6492-provider
+```
+
 > **Why an actor layer at all?** An LLM is great at drafting a matched-
 > lender summary and normalizing application intake -- but it has **no
 > notion of whether an institutional lender's license is actually

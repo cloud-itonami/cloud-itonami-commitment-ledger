@@ -1,0 +1,20 @@
+{:format :cloud-itonami.structured-component/v1
+ :name "cloud-itonami-commitment-isic6492-intake"
+ :source "src/commitledger/isic6492_intake.kotoba"
+ :target :wasm-component-kotoba-v1
+ :ambient-wasi false
+ :policy "isic6492-component-policy.edn"
+ :component-abilities
+ {4 {:target "http://127.0.0.1:18920/api/loan/intake"
+     :operation :http/post
+     :max-bytes 65536
+     :max-items 1
+     :deadline-ms 10000
+     :audit-id "commitment-isic6492-intake-v1"}}
+ :capability-config "qualification/asher-isic6492-capabilities.json"
+ :budgets {:fuel 100000 :memory-pages 16 :deadline-ms 15000}
+ :service {:instance "commitment-isic6492-intake"
+           :port 18913
+           :startup-mode :compile-only}
+ :placement {:replicas 1
+             :labels {:role "commitment-isic6492-intake" :node "asher"}}}

@@ -1,0 +1,31 @@
+(ns commitledger.isic6492-intake-component
+  (:export [intake])
+  (:capabilities #{:http/post})
+  (:schemas
+   {:commitledger.http/post
+    [:record :commitledger.http/post
+     [[:body :string] [:timeout-ms :i64]]]
+    :commitledger.http/request
+    [:variant :commitledger.http/request
+     [[:post [:ref :commitledger.http/post]]]]
+    :commitledger.http/response
+    [:record :commitledger.http/response
+     [[:status :i64] [:body :string]]]
+    :commitledger.http/error
+    [:record :commitledger.http/error
+     [[:code :keyword] [:message :string] [:retryable :bool]]]
+    :commitledger.http/result
+    [:variant :commitledger.http/result
+     [[:ok [:ref :commitledger.http/response]]
+      [:error [:ref :commitledger.http/error]]]]}))
+
+;; The actor supplies only the domain payload and a narrower timeout. The host
+;; provider owns the exact endpoint, CACAO identity, TLS and byte limits, so the
+;; guest cannot turn this grant into general network authority.
+(defn intake [request [:ref :commitledger.http/request]]
+  [:ref :commitledger.http/result]
+  (typed-cap-call
+   :http/post
+   [:ref :commitledger.http/request]
+   [:ref :commitledger.http/result]
+   request))
