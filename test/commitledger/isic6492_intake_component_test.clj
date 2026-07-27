@@ -16,6 +16,8 @@
         function (first (filter #(= 'intake (:name %)) (:functions kir)))
         calls (filter #(and (seq? %) (= 'typed-cap-call (first %)))
                       (tree-seq coll? seq (:body function)))]
+    (is (re-find #"\(http/post request\)" source))
+    (is (not (re-find #"\(typed-cap-call" source)))
     (is (= 1 (count calls)))
     (is (= 4 (second (first calls))))
     (is (= [:ref :commitledger.http/request] (nth (first calls) 2)))

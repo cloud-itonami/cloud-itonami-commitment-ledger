@@ -36,6 +36,11 @@ proposal which must pass the existing `CommitmentLedgerGovernor`.
 The pinned asher qualification evidence is in
 `qualification/asher-20260727.edn`.
 
+The `.kotoba` source calls the semantic abilities directly:
+`llm/generate`, `http/post`, and `storage/transact`. The compiler elaborates
+those names into the typed capability-call HIR and stable wire IDs; application
+code neither selects numeric IDs nor repeats request/result types.
+
 The current Component backend cannot yet lower the nested records in the full
 `llm-v1` request/result directly. This component therefore uses a lossless
 flattened application profile: a one-case `generate` request variant and an
