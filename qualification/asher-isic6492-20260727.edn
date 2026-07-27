@@ -1,0 +1,40 @@
+{:format :cloud-itonami.component-qualification/v1
+ :qualified-at "2026-07-27"
+ :node "asher"
+ :service "com.murakumo.kototama-component.commitment-isic6492-intake"
+ :endpoint "http://127.0.0.1:18913"
+ :component
+ {:cid "bafkreih5k4uv5cmbnvjq2sxhtzaafg3kfuc3z7g5kqbuvqwanaibolnmrm"
+  :sha256 "fd57295e89816d530d4ae79e40029b6a2d05bcfcdd54034ac2c06810172dac8b"
+  :capability-config-sha256
+  "362454d9ba63cf5360475f4ded2f23ad13a6ccfbaf0b5671aa2a10829881fe5c"}
+ :runtime
+ {:sha256 "7c78b9e1d6ebc09774f7fe9cffe030342396d516ee63ef152a35247416bfceed"
+  :startup-mode :compile-only
+  :ambient-wasi false
+  :capabilities ["aiueos-http-post"]
+  :receipt-public-key
+  "59d097d5cad55884bc02cc457c65fccf5eddb2213ffb226bb366e786443663c5"}
+ :provider
+ {:service "com.murakumo.commitment-isic6492-provider"
+  :endpoint "http://127.0.0.1:18920"
+  :bundle-sha256
+  "b364b2bb93617bac711147c2aa5d03c243299c2b0bb02c0518cab5eea67cbc06"
+  :identity :generated-on-node
+  :identity-file-mode "0600"
+  :outbound-origin "https://cloud-itonami-isic-6492.pages.dev"
+  :transport :tls-owned-by-provider
+  :cacao :minted-per-request}
+ :conformance
+ {:component-packaging {:tests 2 :assertions 8 :status :green}
+  :host {:tests 12 :status :green :clippy :green}
+  :provider-smoke
+  {:upstream :local-mock
+   :cacao-header :observed
+   :payload :preserved
+   :status :green}
+  :live-readiness {:component :ready :provider-port :ready}}
+ :safety
+ {:external-test-record-created false
+  :reason "A synthetic loan intake would be a material domain write; live
+           readiness was qualified without creating one."}}
