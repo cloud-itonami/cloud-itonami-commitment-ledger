@@ -33,6 +33,8 @@ inference boundary into a typed WebAssembly Component. It imports only
 `llm/generate`; model credentials and transport remain host-only, and the
 guest receives no WASI authority. The returned value remains an untrusted
 proposal which must pass the existing `CommitmentLedgerGovernor`.
+The pinned asher qualification evidence is in
+`qualification/asher-20260727.edn`.
 
 The current Component backend cannot yet lower the nested records in the full
 `llm-v1` request/result directly. This component therefore uses a lossless
