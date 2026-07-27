@@ -21,7 +21,17 @@
            :input-tokens 49
            :output-tokens 249}
   :effect-events 1
-  :receipt-signature :ed25519-verified}
+  :receipt-signature :ed25519-verified
+  :actor-invocation
+  {:client "murakumo.component-invocation"
+   :request-bound true
+   :receipt-signature :ed25519-verified
+   :request {:max-output-tokens 1024 :temperature-milli 0}
+   :result {:case :ok :finish-reason :stop :output-tokens 510}
+   :typed-budget-probe
+   {:max-output-tokens 256
+    :result-code :llm/empty-output
+    :provider-done-reason :length}}}
  :safety
  {:output-authority :proposal-only
   :governor-required true
