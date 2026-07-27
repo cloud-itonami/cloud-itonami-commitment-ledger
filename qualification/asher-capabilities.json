@@ -1,0 +1,11 @@
+{
+  "format": "kototama.resident-capabilities/v1",
+  "llm": {
+    "endpoint": "http://127.0.0.1:11434/api/generate",
+    "model": "gemma4:e4b-it-qat",
+    "max-request-bytes": 65536,
+    "max-response-bytes": 65536,
+    "deadline-ms": 180000,
+    "audit-id": "commitment-advisor-v1"
+  }
+}

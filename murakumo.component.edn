@@ -1,0 +1,20 @@
+{:format :cloud-itonami.structured-component/v1
+ :name "cloud-itonami-commitment-advisor"
+ :source "src/commitledger/advisor.kotoba"
+ :target :wasm-component-kotoba-v1
+ :ambient-wasi false
+ :policy "component-policy.edn"
+ :component-abilities
+ {11 {:target "ollama://gemma4:e4b-it-qat"
+      :operation :llm/generate
+      :max-bytes 65536
+      :max-items 1
+      :deadline-ms 180000
+      :audit-id "commitment-advisor-v1"}}
+ :capability-config "qualification/asher-capabilities.json"
+ :budgets {:fuel 100000 :memory-pages 16 :deadline-ms 190000}
+ :service {:instance "commitment-advisor"
+           :port 18912
+           :startup-mode :compile-only}
+ :placement {:replicas 1
+             :labels {:role "commitment-advisor" :node "asher"}}}
