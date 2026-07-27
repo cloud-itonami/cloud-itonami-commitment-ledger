@@ -26,6 +26,75 @@ for the two-actuation shape and the idiomatic-`.cljc`-governor, no
 safety-kernel posture). Here it is **Commitment-LLM ⊣
 CommitmentLedgerGovernor**.
 
+## Kotoba Component LLM boundary
+
+`src/commitledger/advisor.kotoba` moves the production advisor's effectful
+inference boundary into a typed WebAssembly Component. It imports only
+`llm/generate`; model credentials and transport remain host-only, and the
+guest receives no WASI authority. The returned value remains an untrusted
+proposal which must pass the existing `CommitmentLedgerGovernor`.
+The pinned asher qualification evidence is in
+`qualification/asher-20260727.edn`.
+
+The current Component backend cannot yet lower the nested records in the full
+`llm-v1` request/result directly. This component therefore uses a lossless
+flattened application profile: a one-case `generate` request variant and an
+`ok|error` result variant with usage counters flattened into `ok`. This is a
+representation adaptation only; the host enforces the same model, token,
+temperature, byte and deadline bounds.
+
+```sh
+clojure -M:component compile src/commitledger/advisor.kotoba \
+  --target component --policy component-policy.edn \
+  --fuel 100000 --memory-pages 16 \
+  --output dist/commitment-advisor.component.wasm
+```
+
+## Kotoba Component HTTP boundary
+
+`src/commitledger/isic6492_intake.kotoba` is a separate HTTP-only Component
+for the existing isic-6492 intake effect. It cannot choose a URL, add
+credentials or access WASI. The guest supplies only a JSON domain payload and
+a timeout narrower than the grant. The loopback provider owns the exact
+isic-6492 origin, CACAO actor identity, outbound TLS, and request/response
+bounds.
+
+The service is intentionally separate from the LLM advisor:
+`murakumo.isic6492.component.edn` grants only `http/post` and places it on
+port 18913; the credential-bearing provider listens only on loopback port
+18920. Build the two artifacts with:
+
+```sh
+clojure -M:component compile src/commitledger/isic6492_intake.kotoba \
+  --target component --policy isic6492-component-policy.edn \
+  --fuel 100000 --memory-pages 16 \
+  --output dist/commitment-isic6492-intake.component.wasm
+npm run build-isic6492-provider
+```
+
+## Kotoba Component storage boundary
+
+`src/commitledger/storage_bridge.kotoba` exposes one typed
+`storage/transact` effect with bounded `get`, `put-new`, and
+`put-existing` cases. The provider fixes the only admitted key to
+`commitment/aggregate`; the guest cannot choose a database, query, origin,
+credential, or filesystem path.
+
+`murakumo.storage.component.edn` places the Component on port 18914 and grants
+only the exact loopback provider on port 18921. The sidecar owns Kotobase
+lookup pulls, the actor identity, read/write CACAO, outbound TLS, and a
+single-writer queue for conditional versions. The full commitment snapshot is
+one bounded value, so hydration requires neither a guest-visible Datalog query
+nor a listing capability.
+
+```sh
+clojure -M:component compile src/commitledger/storage_bridge.kotoba \
+  --target component --policy storage-component-policy.edn \
+  --component-config murakumo.storage.component.edn \
+  --output dist/commitment-storage.component.wasm
+npm run build-kotobase-provider
+```
+
 > **Why an actor layer at all?** An LLM is great at drafting a matched-
 > lender summary and normalizing application intake -- but it has **no
 > notion of whether an institutional lender's license is actually

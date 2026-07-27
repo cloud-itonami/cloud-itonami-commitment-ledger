@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.murakumo.kototama-component.commitment-storage</string>
+  <key>UserName</key>
+  <string>asher</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/asher/.murakumo/kototama-component-commitment-storage/tender-component-host</string>
+    <string>--serve</string>
+  </array>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>KOTOTAMA_BIND_ADDR</key>
+    <string>127.0.0.1:18914</string>
+    <key>KOTOTAMA_COMPONENT_PATH</key>
+    <string>/Users/asher/.murakumo/kototama-component-commitment-storage/application.component.wasm</string>
+    <key>KOTOTAMA_COMPONENT_CID</key>
+    <string>bafkreibgwqwlma4hwk7d47svo7xlpya2vuvt5yk3n5wicc425roa2nqkvm</string>
+    <key>KOTOTAMA_COMPONENT_SHA256</key>
+    <string>26b42cb60387b2be3e7e5577eeb7e01aad2b3ee15b6f6c810b9aec5c0d360aab</string>
+    <key>KOTOTAMA_EXPECTED_RESULT</key>
+    <string>0</string>
+    <key>KOTOTAMA_FUEL</key>
+    <string>100000</string>
+    <key>KOTOTAMA_MEMORY_PAGES</key>
+    <string>16</string>
+    <key>KOTOTAMA_NODE</key>
+    <string>asher</string>
+    <key>KOTOTAMA_RECEIPT_SEED_PATH</key>
+    <string>/Users/asher/.murakumo/kototama-component-commitment-storage/receipt.seed</string>
+    <key>KOTOTAMA_RECEIPT_LOG</key>
+    <string>/Users/asher/.murakumo/kototama-component-commitment-storage/receipts.jsonl</string>
+    <key>KOTOTAMA_CAPABILITY_CONFIG_PATH</key>
+    <string>/Users/asher/.murakumo/kototama-component-commitment-storage/capabilities.json</string>
+    <key>KOTOTAMA_CAPABILITY_CONFIG_SHA256</key>
+    <string>54be2f778ceae58284513565508b0bae79dcce9af463ddd4a4424aafa7b070c5</string>
+    <key>KOTOTAMA_STARTUP_MODE</key>
+    <string>compile-only</string>
+  </dict>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+  <key>ThrottleInterval</key>
+  <integer>10</integer>
+  <key>StandardOutPath</key>
+  <string>/Users/asher/.murakumo/kototama-component-commitment-storage/daemon.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/asher/.murakumo/kototama-component-commitment-storage/daemon.log</string>
+</dict>
+</plist>

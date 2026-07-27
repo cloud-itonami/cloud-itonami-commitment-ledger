@@ -1,0 +1,37 @@
+(ns commitledger.advisor-component
+  (:export [advise])
+  (:capabilities #{:llm/generate})
+  (:schemas
+   {:commitledger.llm/generate
+    [:record :commitledger.llm/generate
+     [[:model :keyword] [:system :string] [:prompt :string]
+      [:max-output-tokens :i64] [:temperature-milli :i64]]]
+    :commitledger.llm/request
+    [:variant :commitledger.llm/request
+     [[:generate [:ref :commitledger.llm/generate]]]]
+    :commitledger.llm/completion
+    [:record :commitledger.llm/completion
+     [[:text :string] [:finish-reason :keyword]
+      [:input-tokens :i64] [:output-tokens :i64]]]
+    :commitledger.llm/error
+    [:record :commitledger.llm/error
+     [[:code :keyword] [:message :string] [:retryable :bool]]]
+    :commitledger.llm/result
+    [:variant :commitledger.llm/result
+     [[:ok [:ref :commitledger.llm/completion]]
+      [:error [:ref :commitledger.llm/error]]]]}))
+
+;; The commitment actor owns the system prompt, facts and request budget; this
+;; guest makes their LLM effect explicit and typed. The host owns the exact
+;; model allowlist, credentials and transport. The result is still only a
+;; proposal; commitledger.governor remains the independent censor.
+;;
+;; Once Component Canonical lowering admits record-new/record-get inside a
+;; typed-cap-call, the pure request construction can move into this guest too.
+(defn advise [request [:ref :commitledger.llm/request]]
+  [:ref :commitledger.llm/result]
+  (typed-cap-call
+   :llm/generate
+   [:ref :commitledger.llm/request]
+   [:ref :commitledger.llm/result]
+   request))

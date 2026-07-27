@@ -29,4 +29,14 @@
                         trancheReleaseOnRequestPost commitledger.edge.commitment-endpoints/on-request-post-tranche-release
                         approveOnRequestPost commitledger.edge.commitment-endpoints/on-request-post-approve
                         applicationOnRequestGet commitledger.edge.commitment-endpoints/on-request-get-application}}}
+   :compiler-options {:output-feature-set :es2020 :infer-externs :auto}}
+  :isic6492-provider
+  {:target :node-script
+   :output-to "dist/isic6492-provider.cjs"
+   :main commitledger.edge.isic6492-provider/main
+   :compiler-options {:output-feature-set :es2020 :infer-externs :auto}}
+  :kotobase-provider
+  {:target :node-script
+   :output-to "dist/kotobase-provider.cjs"
+   :main commitledger.edge.kotobase-provider/main
    :compiler-options {:output-feature-set :es2020 :infer-externs :auto}}}}

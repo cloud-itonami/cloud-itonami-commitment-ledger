@@ -1,0 +1,38 @@
+{:format :cloud-itonami.component-qualification/v1
+ :qualified-at "2026-07-27"
+ :node "asher"
+ :service "com.murakumo.kototama-component.commitment-advisor"
+ :endpoint "http://127.0.0.1:18912"
+ :component
+ {:cid "bafkreidmbslke7ksi6jfnodoztyis232phkqidf4qrni5zjyjbez6nrq3a"
+  :sha256 "6c0c96a27d52479256b86eccf0896b7a79d5040cbc845a8ee53848499f3630d8"
+  :capability-config-sha256
+  "1fc22dcb7ffb1be91fe8d6966b904185fa66554138c65f2d78f2e53e51784532"}
+ :runtime
+ {:sha256 "8f50530978844f1d8b848ef4a79a5bd85e133a8ea49546f5795e3e4c6770879c"
+  :startup-mode :compile-only
+  :ambient-wasi false
+  :capabilities ["aiueos-llm-generate"]}
+ :conformance
+ {:model "gemma4:e4b-it-qat"
+  :request {:max-output-tokens 256 :temperature-milli 0}
+  :result {:case :ok
+           :finish-reason :stop
+           :input-tokens 49
+           :output-tokens 249}
+  :effect-events 1
+  :receipt-signature :ed25519-verified
+  :actor-invocation
+  {:client "murakumo.component-invocation"
+   :request-bound true
+   :receipt-signature :ed25519-verified
+   :request {:max-output-tokens 1024 :temperature-milli 0}
+   :result {:case :ok :finish-reason :stop :output-tokens 510}
+   :typed-budget-probe
+   {:max-output-tokens 256
+    :result-code :llm/empty-output
+    :provider-done-reason :length}}}
+ :safety
+ {:output-authority :proposal-only
+  :governor-required true
+  :note "Provider conformance does not imply proposal acceptance."}}

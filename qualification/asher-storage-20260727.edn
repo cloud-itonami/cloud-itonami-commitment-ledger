@@ -1,0 +1,45 @@
+{:format :cloud-itonami.component-qualification/v1
+ :qualified-at "2026-07-27"
+ :node "asher"
+ :service "com.murakumo.kototama-component.commitment-storage"
+ :endpoint "http://127.0.0.1:18914"
+ :component
+ {:cid "bafkreibgwqwlma4hwk7d47svo7xlpya2vuvt5yk3n5wicc425roa2nqkvm"
+  :sha256 "26b42cb60387b2be3e7e5577eeb7e01aad2b3ee15b6f6c810b9aec5c0d360aab"
+  :capability-config-sha256
+  "54be2f778ceae58284513565508b0bae79dcce9af463ddd4a4424aafa7b070c5"}
+ :runtime
+ {:sha256 "17bd4aa9b577faa9621501d5228107233768dc2afc2744030b286482beea5cfa"
+  :startup-mode :compile-only
+  :ambient-wasi false
+  :capabilities ["aiueos-storage-transact"]
+  :receipt-public-key
+  "6cc5a096534c1aad3e47e6a2332ffe13b68687a2b0c09fbacc3ab45d1ec83b22"}
+ :provider
+ {:service "com.murakumo.commitment-kotobase-provider"
+  :endpoint "http://127.0.0.1:18921/v1/storage"
+  :bundle-sha256
+  "13322dda4152f650ec263949fb1d7e550cd7f6dac03a2ae574125027b1c9c813"
+  :aggregate-key "commitment/aggregate"
+  :outbound-origin "https://kotobase.net"
+  :identity :shared-commitment-actor
+  :identity-file-mode "0600"
+  :read-cacao :startup-mint
+  :write-cacao :fresh-per-transaction
+  :writes :single-writer-queue}
+ :conformance
+ {:component-packaging {:tests 2 :assertions 8 :status :green}
+  :host {:tests 14 :status :green :clippy :green}
+  :repository {:tests 146 :assertions 459 :status :green}
+  :live-read
+  {:key "commitment/aggregate"
+   :result :missing
+   :effects 1
+   :request-bound true
+   :receipt-signature :ed25519-verified
+   :client "murakumo.component-invocation"}}
+ :safety
+ {:external-test-record-created false
+  :external-write-performed false
+  :reason "Qualification used a read of the not-yet-migrated aggregate key;
+           it did not seed or mutate commitment state."}}

@@ -1,0 +1,10 @@
+{
+  "format": "kototama.resident-capabilities/v1",
+  "http": {
+    "endpoint": "http://127.0.0.1:18920/api/loan/intake",
+    "max-request-bytes": 65536,
+    "max-response-bytes": 65536,
+    "deadline-ms": 10000,
+    "audit-id": "commitment-isic6492-intake-v1"
+  }
+}
