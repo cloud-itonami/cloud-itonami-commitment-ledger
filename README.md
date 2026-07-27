@@ -26,6 +26,28 @@ for the two-actuation shape and the idiomatic-`.cljc`-governor, no
 safety-kernel posture). Here it is **Commitment-LLM ⊣
 CommitmentLedgerGovernor**.
 
+## Kotoba Component LLM boundary
+
+`src/commitledger/advisor.kotoba` moves the production advisor's effectful
+inference boundary into a typed WebAssembly Component. It imports only
+`llm/generate`; model credentials and transport remain host-only, and the
+guest receives no WASI authority. The returned value remains an untrusted
+proposal which must pass the existing `CommitmentLedgerGovernor`.
+
+The current Component backend cannot yet lower the nested records in the full
+`llm-v1` request/result directly. This component therefore uses a lossless
+flattened application profile: a one-case `generate` request variant and an
+`ok|error` result variant with usage counters flattened into `ok`. This is a
+representation adaptation only; the host enforces the same model, token,
+temperature, byte and deadline bounds.
+
+```sh
+clojure -M:component compile src/commitledger/advisor.kotoba \
+  --target component --policy component-policy.edn \
+  --fuel 100000 --memory-pages 16 \
+  --output dist/commitment-advisor.component.wasm
+```
+
 > **Why an actor layer at all?** An LLM is great at drafting a matched-
 > lender summary and normalizing application intake -- but it has **no
 > notion of whether an institutional lender's license is actually
