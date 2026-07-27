@@ -1,0 +1,20 @@
+{:format :cloud-itonami.structured-component/v1
+ :name "cloud-itonami-commitment-storage"
+ :source "src/commitledger/storage_bridge.kotoba"
+ :target :wasm-component-kotoba-v1
+ :ambient-wasi false
+ :policy "storage-component-policy.edn"
+ :component-abilities
+ {12 {:target "http://127.0.0.1:18921/v1/storage"
+      :operation :storage/transact
+      :max-bytes 65536
+      :max-items 1
+      :deadline-ms 10000
+      :audit-id "commitment-kotobase-v1"}}
+ :capability-config "qualification/asher-storage-capabilities.json"
+ :budgets {:fuel 100000 :memory-pages 16 :deadline-ms 15000}
+ :service {:instance "commitment-storage"
+           :port 18914
+           :startup-mode :compile-only}
+ :placement {:replicas 1
+             :labels {:role "commitment-storage" :node "asher"}}}

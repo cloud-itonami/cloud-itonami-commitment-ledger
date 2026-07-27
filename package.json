@@ -6,6 +6,7 @@
   "scripts": {
     "build-edge": "npx shadow-cljs release edge-api",
     "build-isic6492-provider": "npx shadow-cljs release isic6492-provider",
+    "build-kotobase-provider": "npx shadow-cljs release kotobase-provider",
     "test-isic6492-provider": "node scripts/smoke-isic6492-provider.mjs",
     "deploy": "wrangler pages deploy public --project-name=cloud-itonami-commitment-ledger"
   }

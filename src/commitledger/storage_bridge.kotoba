@@ -1,0 +1,45 @@
+(ns commitledger.storage-bridge-component
+  (:export [transact])
+  (:capabilities #{:storage/transact})
+  (:schemas
+   {:commitledger.storage/get
+    [:record :commitledger.storage/get [[:key :keyword]]]
+    :commitledger.storage/put-new
+    [:record :commitledger.storage/put-new
+     [[:key :keyword] [:value :string]]]
+    :commitledger.storage/put-existing
+    [:record :commitledger.storage/put-existing
+     [[:key :keyword] [:value :string] [:expected-version :i64]]]
+    :commitledger.storage/request
+    [:variant :commitledger.storage/request
+     [[:get [:ref :commitledger.storage/get]]
+      [:put-new [:ref :commitledger.storage/put-new]]
+      [:put-existing [:ref :commitledger.storage/put-existing]]]]
+    :commitledger.storage/entry
+    [:record :commitledger.storage/entry
+     [[:key :keyword] [:value :string] [:version :i64]]]
+    :commitledger.storage/conflict
+    [:record :commitledger.storage/conflict
+     [[:key :keyword] [:current-version :i64]]]
+    :commitledger.storage/error
+    [:record :commitledger.storage/error
+     [[:code :keyword] [:message :string] [:retryable :bool]]]
+    :commitledger.storage/result
+    [:variant :commitledger.storage/result
+     [[:found [:ref :commitledger.storage/entry]]
+      [:missing :bool]
+      [:written [:ref :commitledger.storage/entry]]
+      [:conflict-current [:ref :commitledger.storage/conflict]]
+      [:conflict-missing :bool]
+      [:error [:ref :commitledger.storage/error]]]]}))
+
+;; The guest sees one bounded, versioned aggregate value. The host fixes the
+;; namespace and exact provider endpoint; the provider alone owns Kotobase
+;; lookup pulls, CACAO, TLS, and transaction credentials.
+(defn transact [request [:ref :commitledger.storage/request]]
+  [:ref :commitledger.storage/result]
+  (typed-cap-call
+   :storage/transact
+   [:ref :commitledger.storage/request]
+   [:ref :commitledger.storage/result]
+   request))

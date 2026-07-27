@@ -72,6 +72,29 @@ clojure -M:component compile src/commitledger/isic6492_intake.kotoba \
 npm run build-isic6492-provider
 ```
 
+## Kotoba Component storage boundary
+
+`src/commitledger/storage_bridge.kotoba` exposes one typed
+`storage/transact` effect with bounded `get`, `put-new`, and
+`put-existing` cases. The provider fixes the only admitted key to
+`commitment/aggregate`; the guest cannot choose a database, query, origin,
+credential, or filesystem path.
+
+`murakumo.storage.component.edn` places the Component on port 18914 and grants
+only the exact loopback provider on port 18921. The sidecar owns Kotobase
+lookup pulls, the actor identity, read/write CACAO, outbound TLS, and a
+single-writer queue for conditional versions. The full commitment snapshot is
+one bounded value, so hydration requires neither a guest-visible Datalog query
+nor a listing capability.
+
+```sh
+clojure -M:component compile src/commitledger/storage_bridge.kotoba \
+  --target component --policy storage-component-policy.edn \
+  --component-config murakumo.storage.component.edn \
+  --output dist/commitment-storage.component.wasm
+npm run build-kotobase-provider
+```
+
 > **Why an actor layer at all?** An LLM is great at drafting a matched-
 > lender summary and normalizing application intake -- but it has **no
 > notion of whether an institutional lender's license is actually
