@@ -24,8 +24,4 @@
 ;; guest cannot turn this grant into general network authority.
 (defn intake [request [:ref :commitledger.http/request]]
   [:ref :commitledger.http/result]
-  (typed-cap-call
-   :http/post
-   [:ref :commitledger.http/request]
-   [:ref :commitledger.http/result]
-   request))
+  (http/post request))

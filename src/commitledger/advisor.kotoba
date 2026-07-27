@@ -27,11 +27,7 @@
 ;; proposal; commitledger.governor remains the independent censor.
 ;;
 ;; Once Component Canonical lowering admits record-new/record-get inside a
-;; typed-cap-call, the pure request construction can move into this guest too.
+;; named ability call, the pure request construction can move into this guest too.
 (defn advise [request [:ref :commitledger.llm/request]]
   [:ref :commitledger.llm/result]
-  (typed-cap-call
-   :llm/generate
-   [:ref :commitledger.llm/request]
-   [:ref :commitledger.llm/result]
-   request))
+  (llm/generate request))

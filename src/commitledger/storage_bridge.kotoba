@@ -38,8 +38,4 @@
 ;; lookup pulls, CACAO, TLS, and transaction credentials.
 (defn transact [request [:ref :commitledger.storage/request]]
   [:ref :commitledger.storage/result]
-  (typed-cap-call
-   :storage/transact
-   [:ref :commitledger.storage/request]
-   [:ref :commitledger.storage/result]
-   request))
+  (storage/transact request))

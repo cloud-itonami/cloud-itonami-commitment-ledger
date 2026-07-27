@@ -16,6 +16,8 @@
         function (first (filter #(= 'transact (:name %)) (:functions kir)))
         calls (filter #(and (seq? %) (= 'typed-cap-call (first %)))
                       (tree-seq coll? seq (:body function)))]
+    (is (re-find #"\(storage/transact request\)" source))
+    (is (not (re-find #"\(typed-cap-call" source)))
     (is (= 1 (count calls)))
     (is (= 12 (second (first calls))))
     (is (= [:ref :commitledger.storage/request] (nth (first calls) 2)))
