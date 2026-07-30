@@ -9,4 +9,14 @@
  :itonami.blueprint/optional-technologies []
  :itonami.blueprint/status :public-oss
  :itonami.blueprint/robotics false
- :itonami.blueprint/maturity :implemented}
+ :itonami.blueprint/maturity :implemented
+ ;; Deployed as a Cloudflare PAGES project (pages_build_output_dir), which is
+ ;; why an earlier check with `wrangler deployments list` — a Workers-only
+ ;; command — reported this actor as not deployed. `wrangler pages project
+ ;; list` shows it live.
+ ;; Pages Functions under /api/commitment/*; /health is the SPA index, not an API.
+ ;; No :health-path is declared, deliberately: there is no health endpoint to
+ ;; name, and naming /health would make a probe report the SPA index as a
+ ;; healthy API.
+ :itonami.blueprint/endpoint "https://cloud-itonami-commitment-ledger.pages.dev"
+ :itonami.blueprint/endpoint-kind :pages-dev}
