@@ -34,8 +34,7 @@
   ;; actually loaded. Overriding both coordinates to the same local root
   ;; closes this gap.
   :dev {:override-deps
-        {io.github.com-junkawasaki/langchain-clj
-         {:local/root "../../kotoba-lang/langchain"}
+        {
          io.github.kotoba-lang/langchain
          {:local/root "../../kotoba-lang/langchain"}}}
   :component
