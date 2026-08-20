@@ -39,8 +39,8 @@
          io.github.kotoba-lang/langchain
          {:local/root "../../kotoba-lang/langchain"}}}
   :component
-  {:extra-deps {io.github.kotoba-lang/compiler
-                {:git/url "https://github.com/kotoba-lang/compiler.git"
+  {:extra-deps {io.github.kotoba-lang/amu
+                {:git/url "https://github.com/kotoba-lang/amu.git"
                  :git/sha "6562af2fd4eb139444cdb44da0f1f7353cc73c77"}
                 io.github.kotoba-lang/kotoba-component
                 {:git/url "https://github.com/kotoba-lang/kotoba-component.git"
@@ -49,8 +49,8 @@
   ;; clojure -M:dev:run  -> drive the demo through one OperationActor
   :run {:main-opts ["-m" "commitledger.sim"]}
   :test {:extra-paths ["test"]
-         :extra-deps {io.github.kotoba-lang/compiler
-                      {:git/url "https://github.com/kotoba-lang/compiler.git"
+         :extra-deps {io.github.kotoba-lang/amu
+                      {:git/url "https://github.com/kotoba-lang/amu.git"
                        :git/sha "6562af2fd4eb139444cdb44da0f1f7353cc73c77"}
                       io.github.kotoba-lang/kotoba-component
                       {:git/url "https://github.com/kotoba-lang/kotoba-component.git"
