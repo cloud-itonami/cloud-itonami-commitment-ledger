@@ -62,7 +62,7 @@
   into `commitledger.operation/build`'s new opts -- `-tranche-release`
   does NOT (see `commitledger.operation`'s ns docstring: only a NEW
   `:commitment/record` triggers an isic-6492 intake)."
-  (:require [clojure.string :as str]
+  (:require [kotoba.lang.text :as str]
             [commitledger.edge.auth :as auth]
             [commitledger.edge.isic6492-client :as isic6492]
             [commitledger.edge.kotobase-store :as kotobase]

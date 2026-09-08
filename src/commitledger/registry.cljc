@@ -46,7 +46,7 @@
   free-text field that smuggles in an equity/dividend/cap-table claim is
   a HARD violation (`commitledger.governor/equity-language-detected-
   violations`)."
-  (:require [clojure.string :as str]))
+  (:require [kotoba.lang.text :as str]))
 
 (defn- unsigned-certificate
   "Every certificate this actor produces is UNSIGNED -- signature is the
@@ -163,7 +163,7 @@
   [text]
   (boolean
    (when (and text (not (str/blank? text)))
-     (let [lower (str/lower-case text)]
+     (let [lower (str/lower text)]
        (some #(str/includes? lower %) equity-blocklist)))))
 
 ;; ----------------------------- personal pledge -----------------------------
@@ -224,7 +224,7 @@
     (throw (ex-info "register-commitment: jurisdiction required" {})))
   (when (< sequence 0)
     (throw (ex-info "register-commitment: sequence must be >= 0" {})))
-  (let [commitment-number (str (str/upper-case jurisdiction) "-COMMIT-" (zero-pad sequence 6))
+  (let [commitment-number (str (str/upper jurisdiction) "-COMMIT-" (zero-pad sequence 6))
         record {"record_id" commitment-number
                 "kind" "commitment-record-draft"
                 "application_id" application-id
@@ -250,7 +250,7 @@
     (throw (ex-info "register-tranche-release: jurisdiction required" {})))
   (when (< sequence 0)
     (throw (ex-info "register-tranche-release: sequence must be >= 0" {})))
-  (let [release-number (str (str/upper-case jurisdiction) "-TRANCHE-" (zero-pad sequence 6))
+  (let [release-number (str (str/upper jurisdiction) "-TRANCHE-" (zero-pad sequence 6))
         record {"record_id" release-number
                 "kind" "tranche-release-draft"
                 "application_id" application-id

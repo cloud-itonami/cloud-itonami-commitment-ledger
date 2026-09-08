@@ -23,7 +23,7 @@
   parsed request bodies below carry ordinary Clojure KEYWORD keys
   (`:tx_edn`/`:query_edn`/`:entity`/...), not JSON string keys."
   (:require [clojure.edn :as edn]
-            [clojure.string :as str]
+            [kotoba.lang.text :as str]
             [clojure.test :refer [deftest is testing]]
             [commitledger.edge.kotobase-http :as khttp]
             [commitledger.edge.kotobase-store :as ks]
