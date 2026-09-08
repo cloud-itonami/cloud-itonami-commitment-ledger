@@ -58,7 +58,7 @@
        set-membership guard (`commitledger.store/tranche-already-
        released?`), never inferred from the application's own
        `:status` -- see `commitledger.store`'s own docstring for why."
-  (:require [clojure.string :as str]
+  (:require [kotoba.lang.text :as str]
             [commitledger.facts :as facts]
             [commitledger.registry :as registry]
             [commitledger.store :as store]))

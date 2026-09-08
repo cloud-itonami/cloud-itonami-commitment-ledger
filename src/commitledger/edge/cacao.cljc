@@ -21,7 +21,7 @@
   after crypto verify succeeds. A captured-and-replayed CACAO past its
   window is rejected here even though the signature itself still checks
   out."
-  (:require [clojure.string :as str]
+  (:require [kotoba.lang.text :as str]
             [commitledger.edge.base58 :as base58]
             [commitledger.edge.cbor :as cbor]))
 

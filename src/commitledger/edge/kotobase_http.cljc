@@ -25,7 +25,7 @@
   own `LiveIsic6492Client`, there is no synchronous JVM equivalent, and
   none is needed: `commitledger.edge.kotobase-store`'s own tests inject
   a plain (non-fetch) mock `:http-fn` instead (that ns's docstring)."
-  (:require [clojure.string :as str]
+  (:require [kotoba.lang.text :as str]
             [commitledger.edge.pcompat :as pc]))
 
 #?(:cljs
@@ -38,7 +38,7 @@
      isic6492-client`'s own convention."
      [{:keys [url method headers body]}]
      (-> (js/fetch url
-                   #js {:method (str/upper-case (name (or method :post)))
+                   #js {:method (str/upper (name (or method :post)))
                         :headers (clj->js (or headers {}))
                         :body body})
          (.then (fn [resp]

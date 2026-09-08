@@ -23,7 +23,7 @@
             #?@(:cljs [[commitledger.edge.base58 :as base58]
                        [commitledger.edge.cacao :as cacao]
                        [commitledger.edge.cacao-mint :as mint]
-                       [clojure.string :as str]]
+                       [kotoba.lang.text :as str]]
                 :clj  [])))
 
 (defprotocol Isic6492Client
