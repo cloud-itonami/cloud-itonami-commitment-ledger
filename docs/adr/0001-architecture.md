@@ -252,9 +252,9 @@ thirteenth check reading a new ground-truth field; check 10 itself
 
 ## Verification
 
-- `cloud-itonami-commitment-ledger`: `clojure -M:dev:test` -- 61 tests /
-  242 assertions, 0 failures, 0 errors. `clojure -M:lint` clean (0
-  errors, 0 warnings). `clojure -M:dev:run` demo verified end-to-end:
+- `cloud-itonami-commitment-ledger`: `kbb -M:dev:test` -- 61 tests /
+  242 assertions, 0 failures, 0 errors. `kbb -M:lint` clean (0
+  errors, 0 warnings). `kbb -M:dev:run` demo verified end-to-end:
   one clean lifecycle through both actuations (application intake ->
   matched-lender commitment record -> tranche-release, each escalating
   to human approval) plus the double-release guard and a missing-
@@ -277,7 +277,7 @@ thirteenth check reading a new ground-truth field; check 10 itself
 - `deps.edn` pins `io.github.com-junkawasaki/langgraph-clj` and
   `io.github.kotoba-lang/langchain-store` via `:local/root` directly in
   the top-level `:deps` (not only under a `:dev` alias), matching
-  `cloud-itonami-isic-6493`'s own posture so a bare `clojure -M:test`
+  `cloud-itonami-isic-6493`'s own posture so a bare `kbb -M:test`
   resolves offline inside the monorepo checkout.
 
 ## Alternatives considered

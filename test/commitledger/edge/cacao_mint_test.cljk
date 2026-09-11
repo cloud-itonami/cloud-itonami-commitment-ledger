@@ -14,9 +14,9 @@
   equivalent -- there is nothing to `:require` under `:clj` without
   reimplementing Ed25519/CBOR/base58 wire format wholesale, exactly
   what Decision 8 already ruled out ('do not reinvent the wire
-  format'), and this repo's own `clojure -M:dev:test` is JVM-only by
+  format'), and this repo's own `kbb -M:dev:test` is JVM-only by
   design (Decision 8 also explicitly declines to stand up a second
-  CLJS-only test toolchain). So `clojure -M:dev:test` cannot execute
+  CLJS-only test toolchain). So `kbb -M:dev:test` cannot execute
   the actual round-trip below -- the `:clj` branch is a documented,
   honest no-op, NOT a claim of coverage.
 
@@ -25,7 +25,7 @@
   this workspace's designated script-tooling runtime, ranked ABOVE the
   JVM in `CLAUDE.md`'s runtime-priority ladder, and nbb natively
   executes a `.cljc` file's `:cljs` reader-conditional branch, unlike
-  `clojure -M:dev:test`). That script was run for real as part of
+  `kbb -M:dev:test`). That script was run for real as part of
   landing this feature; its captured stdout is quoted in `docs/adr/
   0003-isic6492-wiring-and-approval-resume.md`. This is, if anything,
   MORE rigorous than Decision 8's own precedent (which trusts an

@@ -8,7 +8,7 @@
   store!` work against it transparently -- all end-to-end against a
   fake kotobase.net.
 
-  Runs entirely on `:clj` (`clojure -M:dev:test`) via `commitledger.
+  Runs entirely on `:clj` (`kbb -M:dev:test`) via `commitledger.
   edge.kotobase-http/resolved-mock-http-fn` -- no real network, no real
   crypto (`mint-cacao!` here is a plain counting stub, not `commitledger.
   edge.kotobase-identity`'s real CACAO mint, which is CLJS-only real

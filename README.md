@@ -49,7 +49,7 @@ representation adaptation only; the host enforces the same model, token,
 temperature, byte and deadline bounds.
 
 ```sh
-clojure -M:component compile src/commitledger/advisor.kotoba \
+kbb -M:component compile src/commitledger/advisor.kotoba \
   --target component --policy component-policy.edn \
   --fuel 100000 --memory-pages 16 \
   --output dist/commitment-advisor.component.wasm
@@ -70,7 +70,7 @@ port 18913; the credential-bearing provider listens only on loopback port
 18920. Build the two artifacts with:
 
 ```sh
-clojure -M:component compile src/commitledger/isic6492_intake.kotoba \
+kbb -M:component compile src/commitledger/isic6492_intake.kotoba \
   --target component --policy isic6492-component-policy.edn \
   --fuel 100000 --memory-pages 16 \
   --output dist/commitment-isic6492-intake.component.wasm
@@ -93,7 +93,7 @@ one bounded value, so hydration requires neither a guest-visible Datalog query
 nor a listing capability.
 
 ```sh
-clojure -M:component compile src/commitledger/storage_bridge.kotoba \
+kbb -M:component compile src/commitledger/storage_bridge.kotoba \
   --target component --policy storage-component-policy.edn \
   --component-config murakumo.storage.component.edn \
   --output dist/commitment-storage.component.wasm
@@ -269,10 +269,10 @@ approved past; a clean proposal still always routes to a human.
 ## Run
 
 ```bash
-clojure -M:dev:run     # walk one clean intake -> record -> tranche-release lifecycle
+kbb -M:dev:run     # walk one clean intake -> record -> tranche-release lifecycle
                         # + the double-release guard + all ten :commitment/record HARD-hold checks
-clojure -M:dev:test    # governor contract · phase invariants · store parity · registry conformance · advisor/operation smoke
-clojure -M:lint        # clj-kondo (errors fail; CI mirrors this)
+kbb -M:dev:test    # governor contract · phase invariants · store parity · registry conformance · advisor/operation smoke
+kbb -M:lint        # clj-kondo (errors fail; CI mirrors this)
 ```
 
 ## Why NOT an ISIC-coded actor
@@ -319,13 +319,13 @@ for the full design record. Summary:
 - **Portable injection seams throughout** (`Lookup`/`KVStore`/
   `CacaoVerifier` protocols, `commitledger.edge.pcompat`'s async seam)
   so every edge-layer core-logic fn is directly testable under the SAME
-  `clojure -M:dev:test` JVM runner as the rest of this repo -- no second
+  `kbb -M:dev:test` JVM runner as the rest of this repo -- no second
   CLJS-only test toolchain introduced.
 
 Run/deploy (see `shadow-cljs.edn`'s `:edge-api` build, `wrangler.jsonc`):
 
 ```bash
-npx shadow-cljs release edge-api                        # compiles functions/edge/commitment-edge-core.js
+amu compile --target wasm32-browser edge-api                        # compiles functions/edge/commitment-edge-core.js
 wrangler pages deploy public --project-name=cloud-itonami-commitment-ledger
 ```
 

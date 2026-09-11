@@ -39,7 +39,7 @@
   own platform constraint -- see that ns's docstring for why there is no
   JVM branch: reimplementing Ed25519/SHA-256 wire format on the JVM
   would violate this fleet's own \"do not reinvent the wire format\"
-  rule; `clojure -M:dev:test` is JVM-only by design here, so this ns's
+  rule; `kbb -M:dev:test` is JVM-only by design here, so this ns's
   own JVM test is a documented no-op stub, exactly `commitledger.edge.
   cacao-mint-test`'s own precedent -- the real round-trip runs via
   `scripts/verify-kotobase-identity-roundtrip.cljs` under nbb).

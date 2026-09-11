@@ -8,7 +8,7 @@
 ;; SIWE plaintext, base58 did:key), the single most important
 ;; correctness property for this actor's new self-mint identity.
 ;;
-;; Usage:  nbb --classpath src scripts/verify-cacao-mint-roundtrip.cljk
+;; Usage:  kbb --backend sci --classpath src scripts/verify-cacao-mint-roundtrip.cljk
 ;; Exits non-zero (and prints why) on ANY failure -- signature invalid,
 ;; iss mismatch, or a thrown exception.
 
