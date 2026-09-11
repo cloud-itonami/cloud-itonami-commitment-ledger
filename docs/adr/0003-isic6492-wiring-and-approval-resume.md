@@ -97,17 +97,17 @@ never fire at all -- confirmed empirically live (see Verification).
 `record-core!` still threads `isic6492-opts` too, defensively, in case
 a future phase change ever made `:commitment/record` auto-eligible, but
 `approve-core!` is the call site that matters today.
-`test/commitledger/edge/commitment_endpoints_test.cljc`'s
+`test/commitledger/edge/commitment_endpoints_test.cljk`'s
 `approve-true-fires-the-isic6492-client-because-commit-only-happens-on-
 resume` regression-guards this.
 
 ### Decision 4: self-mint identity, generated once offline, stored as a Cloudflare secret
 
-`src/commitledger/edge/cacao_mint.cljc` is a direct, faithful PORT of
+`src/commitledger/edge/cacao_mint.cljk` is a direct, faithful PORT of
 `gftdcojp/cloud-itonami`'s own `cloud_itonami.edge.cacao-mint` (same
 license-compatible local-mirror convention this repo's `cacao.cljc`/
 `base58.cljc`/`cbor.cljc` already established, ADR-0002 Decision 3).
-`scripts/generate-actor-identity.cljs` (an **nbb** script, per this
+`scripts/generate-actor-identity.cljk` (an **nbb** script, per this
 workspace's runtime-priority rule) generates the Ed25519 keypair ONCE,
 offline, printing the did:key and the exportable private-key material
 to stdout -- NEVER written into any committed file. The private key
@@ -257,9 +257,9 @@ authorization/security semantics.
   CLJS/JVM host-conditional false positive `.clj-kondo/config.edn`
   already documents and downgrades to warning).
 - `npx shadow-cljs release edge-api` compiles cleanly.
-- `scripts/generate-actor-identity.cljs` run for real via nbb
+- `scripts/generate-actor-identity.cljk` run for real via nbb
   (confirmed Node's WebCrypto Ed25519 keygen/export works under nbb).
-- `scripts/verify-cacao-mint-roundtrip.cljs` run for real via nbb:
+- `scripts/verify-cacao-mint-roundtrip.cljk` run for real via nbb:
   `ROUNDTRIP OK: mint and verify agree on wire format` -- proves this
   actor's own mint and its (ported) verify actually agree on wire
   format, the single most important correctness property for the new

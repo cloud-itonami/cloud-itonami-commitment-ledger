@@ -5,7 +5,7 @@
   edge.isic6492-client` already established for this actor's isic-6492
   outbound calls (`$COMMITMENT_LEDGER_ACTOR_SEED`/`_DID`, a Cloudflare
   Pages secret + public var this actor already has, generated once by
-  `scripts/generate-actor-identity.cljs`) -- no new key, no owner
+  `scripts/generate-actor-identity.cljk`) -- no new key, no owner
   hand-off, one actor identity used for every outbound self-mint this
   actor ever needs. Only the RESOURCE SCOPE minted differs per
   destination (isic-6492's intake endpoint vs kotobase.net's datomic.*

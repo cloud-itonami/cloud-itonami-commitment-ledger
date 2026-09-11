@@ -24,7 +24,7 @@ StateGraph core.
 ### Decision 1: check 13 is additive, not a replacement for check 10
 
 `borrower-registration-not-verified-violations` (check 13,
-`src/commitledger/governor.cljc`) is a NEW, thirteenth HARD check --
+`src/commitledger/governor.cljk`) is a NEW, thirteenth HARD check --
 appended, never renumbering the original twelve. It is independent of
 check 10 (`borrower-not-self-registered-violations`, still present,
 unchanged): check 10 verifies the `:borrower-org-repo`/`:borrower-did`
@@ -173,7 +173,7 @@ unmodified algorithm a second time. Instead: `commitledger.edge.auth`
 decouples the AUTH-GATING LOGIC (CACAO header parse, resource-scope
 matching, lender-identity matching, response shaping -- everything this
 repo actually adds) from the crypto itself via the `CacaoVerifier`
-injection seam (Decision 7), and `test/commitledger/edge/auth_test.cljc`
+injection seam (Decision 7), and `test/commitledger/edge/auth_test.cljk`
 exercises that gating logic exhaustively with `mock-verifier`. The
 crypto path itself is exercised where it already has a real, passing
 test suite -- upstream -- and ported here byte-for-byte, unmodified.

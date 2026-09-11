@@ -147,7 +147,7 @@ construction:**
 Two independent layers enforce this (`commitledger.governor`'s
 `high-stakes` set and `commitledger.phase`'s phase table, which never
 puts either op in any phase's `:auto` set) -- see `commitledger.phase`'s
-docstring and `test/commitledger/phase_test.cljc`. The actor may draft,
+docstring and `test/commitledger/phase_test.cljk`. The actor may draft,
 check and recommend; a human platform operator is always the one who
 actually authorizes.
 
@@ -333,21 +333,21 @@ wrangler pages deploy public --project-name=cloud-itonami-commitment-ledger
 
 | File | Role |
 |---|---|
-| `src/commitledger/store.cljc` | **Store** protocol -- `MemStore` \| `DatomicStore` (`langchain.db`) + append-only audit ledger + commitment/tranche-release draft histories + the dedicated `tranche-already-released?` double-actuation guard + `empty-store` (V2's KV-rehydration seam) |
-| `src/commitledger/registry.cljc` | Draft-record construction, `rate-ceiling-for-principal` (利息制限法 tiers), `compute-capacity-ratio`, `equity-blocklist`, `personal-pledge-required-fields`, `borrower-ref-well-formed?` -- pure ground-truth calculations |
-| `src/commitledger/facts.cljc` | Per-jurisdiction lending spec-basis catalog with an official citation per entry, honest coverage reporting |
-| `src/commitledger/advisor.cljc` | **Commitment-LLM Advisor** -- `mock-advisor` \| `llm-advisor`; intake/matched-commitment/tranche-release proposals |
-| `src/commitledger/governor.cljc` | **CommitmentLedgerGovernor** -- 11 `:commitment/record` HARD checks + 2 `:commitment/tranche-release` HARD checks + 1 soft (confidence/actuation gate) |
-| `src/commitledger/phase.cljc` | **Phase 0→3** -- read-only → assisted intake → supervised (both actuations always human; application intake is the ONLY auto-eligible op, no capital risk) |
-| `src/commitledger/operation.cljc` | **OperationActor** -- langgraph-clj StateGraph, one graph drives both actuations |
-| `src/commitledger/sim.cljc` | demo driver |
-| `src/commitledger/edge/pcompat.cljc` | V2 -- portable async seam (`resolved`/`then`) shared by every edge ns below |
-| `src/commitledger/edge/registrylookup.cljc` | V2 -- `Lookup` protocol, `LiveLookup` (real `GET /api/open-business`) \| `MockLookup` |
-| `src/commitledger/edge/kv_codec.cljc` | V2 -- pure application/ledger-state <-> JSON-safe map codec |
-| `src/commitledger/edge/kv_store.cljc` | V2 -- `KVStore` protocol, `CloudflareKVStore` \| `mem-kv-store`, + `load-store`/`save-store!` |
-| `src/commitledger/edge/auth.cljc` | V2 -- portable CACAO-gating core (`CacaoVerifier` protocol, resource-scope + lender-identity checks) |
+| `src/commitledger/store.cljk` | **Store** protocol -- `MemStore` \| `DatomicStore` (`langchain.db`) + append-only audit ledger + commitment/tranche-release draft histories + the dedicated `tranche-already-released?` double-actuation guard + `empty-store` (V2's KV-rehydration seam) |
+| `src/commitledger/registry.cljk` | Draft-record construction, `rate-ceiling-for-principal` (利息制限法 tiers), `compute-capacity-ratio`, `equity-blocklist`, `personal-pledge-required-fields`, `borrower-ref-well-formed?` -- pure ground-truth calculations |
+| `src/commitledger/facts.cljk` | Per-jurisdiction lending spec-basis catalog with an official citation per entry, honest coverage reporting |
+| `src/commitledger/advisor.cljk` | **Commitment-LLM Advisor** -- `mock-advisor` \| `llm-advisor`; intake/matched-commitment/tranche-release proposals |
+| `src/commitledger/governor.cljk` | **CommitmentLedgerGovernor** -- 11 `:commitment/record` HARD checks + 2 `:commitment/tranche-release` HARD checks + 1 soft (confidence/actuation gate) |
+| `src/commitledger/phase.cljk` | **Phase 0→3** -- read-only → assisted intake → supervised (both actuations always human; application intake is the ONLY auto-eligible op, no capital risk) |
+| `src/commitledger/operation.cljk` | **OperationActor** -- langgraph-clj StateGraph, one graph drives both actuations |
+| `src/commitledger/sim.cljk` | demo driver |
+| `src/commitledger/edge/pcompat.cljk` | V2 -- portable async seam (`resolved`/`then`) shared by every edge ns below |
+| `src/commitledger/edge/registrylookup.cljk` | V2 -- `Lookup` protocol, `LiveLookup` (real `GET /api/open-business`) \| `MockLookup` |
+| `src/commitledger/edge/kv_codec.cljk` | V2 -- pure application/ledger-state <-> JSON-safe map codec |
+| `src/commitledger/edge/kv_store.cljk` | V2 -- `KVStore` protocol, `CloudflareKVStore` \| `mem-kv-store`, + `load-store`/`save-store!` |
+| `src/commitledger/edge/auth.cljk` | V2 -- portable CACAO-gating core (`CacaoVerifier` protocol, resource-scope + lender-identity checks) |
 | `src/commitledger/edge/{cacao,base58,cbor}.cljc` | V2 -- ported CACAO verify + wire format (CLJS-only, faithful port of `cloud_itonami.edge.*`) |
-| `src/commitledger/edge/commitment_endpoints.cljc` | V2 -- the 4 HTTP handlers |
+| `src/commitledger/edge/commitment_endpoints.cljk` | V2 -- the 4 HTTP handlers |
 | `test/commitledger/*_test.cljc` | governor contract (all 13 checks, one test each) · phase invariants · store parity · registry conformance · advisor/operation smoke |
 | `test/commitledger/edge/*_test.cljc` | V2 -- registrylookup/kv-codec/kv-store/auth/commitment-endpoints, all portable (Mock/Mem, no network/crypto) |
 
