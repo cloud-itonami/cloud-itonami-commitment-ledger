@@ -17,7 +17,7 @@
   shared EDN-blob codec (`ls/enc`/`ls/dec*`) instead of hand-rolling it.
 
   Both implement the same protocol and pass the same contract
-  (test/commitledger/store_contract_test.cljc), which is the whole
+  (test/commitledger/store_contract_test.cljk), which is the whole
   point: the actor, the CommitmentLedgerGovernor and the audit ledger
   never know which SSoT they run on.
 

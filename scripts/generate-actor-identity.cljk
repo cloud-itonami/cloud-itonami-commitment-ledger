@@ -1,7 +1,7 @@
 ;; nbb script -- generates this actor's OWN outbound self-mint identity
 ;; (docs/adr/0003-isic6492-wiring-and-approval-resume.md), ONCE, offline.
 ;;
-;; Usage:  nbb --classpath src scripts/generate-actor-identity.cljs
+;; Usage:  nbb --classpath src scripts/generate-actor-identity.cljk
 ;;
 ;; Prints the did:key and the exportable private-key material (standard
 ;; base64) to STDOUT. NEVER writes the private key into any committed

@@ -71,7 +71,7 @@
 #?(:cljs
    (defn import-signing-key
      "seed-b64 (standard base64, the 32-byte raw Ed25519 private seed
-     `scripts/generate-actor-identity.cljs` printed and
+     `scripts/generate-actor-identity.cljk` printed and
      `COMMITMENT_LEDGER_ACTOR_SEED` stores), did (this actor's own
      did:key, `COMMITMENT_LEDGER_ACTOR_DID`, used to derive the JWK 'x'
      public component) -> promise-like of a CryptoKey usable for
@@ -106,7 +106,7 @@
              ;; YYYY-MM-DDTHH:MM:SSZ -- no fractional seconds -- so the
              ;; raw .toISOString() (which includes millis) must be
              ;; truncated. Confirmed empirically via
-             ;; scripts/verify-cacao-mint-roundtrip.cljs (a bare
+             ;; scripts/verify-cacao-mint-roundtrip.cljk (a bare
              ;; .toISOString() iat fails verify with "invalid CACAO
              ;; iat" even though the signature itself is valid).
              iat (.replace (.toISOString (js/Date.)) #"\.\d{3}Z$" "Z")

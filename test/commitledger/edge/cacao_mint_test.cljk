@@ -21,7 +21,7 @@
   honest no-op, NOT a claim of coverage.
 
   The round trip DOES run for real, on Node's WebCrypto, via
-  `scripts/verify-cacao-mint-roundtrip.cljs` (an nbb script -- nbb is
+  `scripts/verify-cacao-mint-roundtrip.cljk` (an nbb script -- nbb is
   this workspace's designated script-tooling runtime, ranked ABOVE the
   JVM in `CLAUDE.md`'s runtime-priority ladder, and nbb natively
   executes a `.cljc` file's `:cljs` reader-conditional branch, unlike
@@ -42,12 +42,12 @@
      (is true
          "cacao-mint/cacao are CLJS-only real Ed25519 crypto with no JVM
           equivalent -- see ns docstring. The real round-trip proof runs
-          via scripts/verify-cacao-mint-roundtrip.cljs (nbb), executed
+          via scripts/verify-cacao-mint-roundtrip.cljk (nbb), executed
           for real; its output is quoted in docs/adr/0003-isic6492-
           wiring-and-approval-resume.md.")
      :cljs
      (throw (js/Error.
              "cacao-mint-test is a documentation-only stub under a real cljs test
               runner too -- this repo does not stand up one (see ns docstring);
-              the real proof is scripts/verify-cacao-mint-roundtrip.cljs, run
+              the real proof is scripts/verify-cacao-mint-roundtrip.cljk, run
               directly via nbb, not through clojure.test."))))

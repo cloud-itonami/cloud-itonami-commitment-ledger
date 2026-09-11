@@ -12,7 +12,7 @@
   "vars": {
     // Public (not secret -- it IS the public key, base58-encoded).
     // Set/updated via `wrangler pages deployment ... --var` or the
-    // dashboard; regenerate with scripts/generate-actor-identity.cljs.
+    // dashboard; regenerate with scripts/generate-actor-identity.cljk.
     // COMMITMENT_LEDGER_ACTOR_SEED (the private key material) is a
     // Cloudflare Pages SECRET (`wrangler pages secret put
     // COMMITMENT_LEDGER_ACTOR_SEED --project-name
