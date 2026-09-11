@@ -5,7 +5,7 @@
  ;; (forkable outside the workspace); the :local/root paths only resolve
  ;; inside the monorepo checkout — a standalone fork should override them
  ;; with git coordinates. Same top-level-:deps-not-just-:dev posture as
- ;; `cloud-itonami-isic-6493`'s deps.edn, so a bare `clojure -M:test`
+ ;; `cloud-itonami-isic-6493`'s deps.edn, so a bare `kbb -M:test`
  ;; resolves offline inside the monorepo checkout.
  :deps {
         ;; kotoba.lang.text, not clojure.string. Pinned as an explicit floor:
@@ -33,7 +33,7 @@
   ;; confirmed directly while adding commitledger.edge.kotobase-store
   ;; (the first code in this repo to exercise langchain.kotoba-db/
   ;; kotoba-api-async, a brand-new fn added by this same migration):
-  ;; `clojure -M:dev:test` threw "No such var: kdb/kotoba-api-async"
+  ;; `kbb -M:dev:test` threw "No such var: kdb/kotoba-api-async"
   ;; despite the fn genuinely existing in the local checkout, because
   ;; the OLDER gitlibs-pinned copy (predating that addition) was the one
   ;; actually loaded. Overriding both coordinates to the same local root
@@ -50,7 +50,7 @@
                 {:git/url "https://github.com/kotoba-lang/kotoba-component.git"
                  :git/sha "99275e24570265ecba91fd4026d993c135a02362"}}
    :main-opts ["-m" "kotoba.compiler.cli"]}
-  ;; clojure -M:dev:run  -> drive the demo through one OperationActor
+  ;; kbb -M:dev:run  -> drive the demo through one OperationActor
   :run {:main-opts ["-m" "commitledger.sim"]}
   :test {:extra-paths ["test"]
          :extra-deps {io.github.kotoba-lang/amu

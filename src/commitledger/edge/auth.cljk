@@ -5,7 +5,7 @@
   re-shaped as an INJECTION SEAM (`CacaoVerifier`, same swap-not-rewrite
   philosophy as `commitledger.store`'s `Store` and `commitledger.edge.
   registrylookup`'s `Lookup`) so this ns has ZERO `js/` interop and is
-  directly unit-testable under `clojure -M:dev:test` (JVM) with a
+  directly unit-testable under `kbb -M:dev:test` (JVM) with a
   `mock-verifier` -- no real Ed25519/Web-Crypto needed to test the AUTH
   GATING LOGIC (resource-scope matching, lender-identity matching,
   response shaping) itself. The REAL crypto (`commitledger.edge.cacao/

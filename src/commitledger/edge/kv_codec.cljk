@@ -14,7 +14,7 @@
   in `gftdcojp/cloud-itonami` (`ma_endpoints.cljc`'s `revenueBand` etc).
 
   Pure data transform -- no `js/` interop anywhere in this ns, so it is
-  fully portable and directly unit-testable under `clojure -M:dev:test`
+  fully portable and directly unit-testable under `kbb -M:dev:test`
   (JVM). The actual `js/JSON.stringify`/`.parse` calls live in
   `commitledger.edge.kv-store`'s CLJS-only `CloudflareKVStore`, which
   uses `application->json`/`json->application` as the encode/decode step

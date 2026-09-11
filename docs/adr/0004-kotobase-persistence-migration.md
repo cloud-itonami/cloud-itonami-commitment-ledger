@@ -59,9 +59,9 @@ Not previously known, and not present in the ADR-2607184000 precedent (which ran
 
 ## Verification
 
-- `clojure -M:dev:test`: 140 tests / 435 assertions (up from 131/399), 0 failures.
-- `clojure -M:lint`: 0 errors (22 pre-existing-shaped warnings, all `js/`-interop-invisible-to-:clj-lint, consistent with this repo's existing tolerated pattern).
-- `npx shadow-cljs release edge-api`: compiles cleanly (0 errors, 2 pre-existing `:redef` warnings unrelated to this change).
+- `kbb -M:dev:test`: 140 tests / 435 assertions (up from 131/399), 0 failures.
+- `kbb -M:lint`: 0 errors (22 pre-existing-shaped warnings, all `js/`-interop-invisible-to-:clj-lint, consistent with this repo's existing tolerated pattern).
+- `amu compile --target wasm32-browser edge-api`: compiles cleanly (0 errors, 2 pre-existing `:redef` warnings unrelated to this change).
 - Live: deployed to Cloudflare Pages Production (branch `main`, NOT the default `HEAD`/Preview environment `wrangler pages deploy` uses for a detached-HEAD checkout -- `--branch=main` required). `POST /api/commitment/intake` against `https://cloud-itonami-commitment-ledger.pages.dev` -> 201, `borrowerRegistrationVerified: true` (against a real self-registered ADR-0013 tenant, `e2eproof/commitledgertest`). A second, independently-minted intake produced a genuinely distinct application id. `GET /api/commitment/{id}` (a fresh, separate HTTP request) confirmed the data persisted and is independently retrievable via kotobase.net.
 
 ## References

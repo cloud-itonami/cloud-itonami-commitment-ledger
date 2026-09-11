@@ -1,7 +1,7 @@
 // Thin routing shim — logic in
 // src/commitledger/edge/commitment_endpoints.cljk, compiled by
 // shadow-cljs :edge-api into functions/edge/commitment-edge-core.js.
-// Regenerate with: npx shadow-cljs release edge-api
+// Regenerate with: amu compile --target wasm32-browser edge-api
 //
 // POST /api/commitment/{id}/approve — V3
 // (docs/adr/0003-isic6492-wiring-and-approval-resume.md). Resumes an

@@ -15,7 +15,7 @@
   edge/cacao_test.cljc`, `base58_test.cljc`, `cbor_test.cljc`) — which
   itself needs a dedicated CLJS Node test runner
   (`cloud_itonami.edge.cljs-test-runner`, a SEPARATE toolchain from that
-  repo's own JVM `clojure -M:test`) precisely because these files have no
+  repo's own JVM `kbb -M:test`) precisely because these files have no
   `:clj` branch. This repo deliberately does not stand up a second CLJS
   test toolchain just to re-run the identical, unmodified algorithm a
   second time (see `docs/adr/0002-http-edge-live-registry-

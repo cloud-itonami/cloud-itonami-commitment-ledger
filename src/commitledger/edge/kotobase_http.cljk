@@ -61,6 +61,6 @@
   platform (a real Promise under `:cljs`, the plain value itself under
   `:clj` -- exactly `commitledger.edge.pcompat`'s own documented
   duality). Lets `commitledger.edge.kotobase-store`'s own tests run on
-  the JVM (`clojure -M:dev:test`) without any real network or crypto."
+  the JVM (`kbb -M:dev:test`) without any real network or crypto."
   [respond-fn]
   (fn [req] (pc/resolved (respond-fn req))))

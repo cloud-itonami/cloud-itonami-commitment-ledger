@@ -49,7 +49,7 @@ endpoints/intake-core!` -- an edge handler, not the Governor -- and its
 boolean result is stored as that ground-truth field alongside every
 other stored field. This was the explicit, non-negotiable design
 constraint for V2 (make the Governor async would break its own
-`clojure -M:dev:test` contract and the actor's core "the Governor
+`kbb -M:dev:test` contract and the actor's core "the Governor
 independently re-verifies, never trusts a live call mid-decision"
 posture) and is why `commitledger.edge.registrylookup` is an
 INJECTION-SEAM port (`Lookup` protocol, `LiveLookup` | `MockLookup`)
@@ -163,11 +163,11 @@ signature-crypto test suite against this EXACT, unmodified algorithm --
 but it needs a dedicated CLJS Node test runner
 (`cloud_itonami.edge.cljs-test-runner`, invoked via a bespoke `clojure
 -Sdeps ... -M:cljs -m cljs.main --target node` incantation, a SEPARATE
-toolchain from that repo's own JVM `clojure -M:test`/`cloud-itonami.
+toolchain from that repo's own JVM `kbb -M:test`/`cloud-itonami.
 test-runner`). Per this task's own explicit instruction ("this
 workspace's runtime priority ... is portable .cljc first; don't
 introduce a whole new CLJS-only test toolchain if you can keep this
-portable and testable under the existing `clojure -M:dev:test`"), this
+portable and testable under the existing `kbb -M:dev:test`"), this
 repo does NOT stand up that second toolchain to re-run an identical,
 unmodified algorithm a second time. Instead: `commitledger.edge.auth`
 decouples the AUTH-GATING LOGIC (CACAO header parse, resource-scope
@@ -191,7 +191,7 @@ test suite -- upstream -- and ported here byte-for-byte, unmodified.
   commit invariant) is unmodified and still passes unmodified.
 - (+) `commitledger.edge.*`'s core logic (registrylookup/kv-store/auth/
   commitment-endpoints' `*-core!` fns) is portable `.cljc`, directly
-  testable under the SAME `clojure -M:dev:test` JVM runner as the rest
+  testable under the SAME `kbb -M:dev:test` JVM runner as the rest
   of this repo -- no second toolchain introduced.
 - (-) Check 13 is a point-in-time check at intake, not re-verified
   before `:commitment/record` runs (Decision 2's caveat) -- a real

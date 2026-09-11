@@ -1,5 +1,5 @@
 (ns commitledger.sim
-  "Demo driver -- `clojure -M:dev:run`. Walks a clean application
+  "Demo driver -- `kbb -M:dev:run`. Walks a clean application
   (`app-clean`) through intake -> commitment/record (matched
   institutional lender + suggested terms, always escalates) -> human
   approval -> commit -> commitment/tranche-release (tranche 0, milestone

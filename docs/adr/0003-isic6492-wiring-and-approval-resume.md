@@ -250,13 +250,13 @@ authorization/security semantics.
 
 ## Verification
 
-- `clojure -M:dev:test` -- 131 tests / 399 assertions, 0 failures, 0
+- `kbb -M:dev:test` -- 131 tests / 399 assertions, 0 failures, 0
   errors (up from the pre-existing 107 tests / 338 assertions; ALL
   prior tests pass unmodified).
-- `clojure -M:lint` -- 0 errors (17 warnings, the same class of
+- `kbb -M:lint` -- 0 errors (17 warnings, the same class of
   CLJS/JVM host-conditional false positive `.clj-kondo/config.edn`
   already documents and downgrades to warning).
-- `npx shadow-cljs release edge-api` compiles cleanly.
+- `amu compile --target wasm32-browser edge-api` compiles cleanly.
 - `scripts/generate-actor-identity.cljk` run for real via nbb
   (confirmed Node's WebCrypto Ed25519 keygen/export works under nbb).
 - `scripts/verify-cacao-mint-roundtrip.cljk` run for real via nbb:
