@@ -32,7 +32,7 @@
   upstream repo's test suite for unmodified code, unverified by
   THIS repo) -- here fresh, real keys are generated and a fresh CACAO
   is minted-and-verified on every run, not merely trusted from a doc."
-  (:require [clojure.test :refer [deftest is]]
+  (:require [kotoba.test :refer [deftest is]]
             #?@(:cljs [[commitledger.edge.cacao-mint :as mint]
                        [commitledger.edge.cacao :as cacao]]
                 :clj  [])))

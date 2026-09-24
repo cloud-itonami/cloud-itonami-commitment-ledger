@@ -4,7 +4,7 @@
   what makes 'swap the SSoT for Datomic / kotoba-server' a configuration
   change, not a rewrite -- see `credit.store-contract-test`
   (`cloud-itonami-isic-6492`) for the same pattern on a sibling actor."
-  (:require [clojure.test :refer [deftest is testing]]
+  (:require [kotoba.test :refer [deftest is testing]]
             [commitledger.store :as store]))
 
 (defn- backends []

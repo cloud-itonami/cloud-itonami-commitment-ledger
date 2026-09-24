@@ -5,7 +5,7 @@
   `CloudflareKVStore` is `:cljs`-only KV-binding interop, exercised at
   deploy time, not by this suite -- see `commitledger.edge.auth-test`'s
   ns docstring for the same reasoning applied to CACAO verify."
-  (:require [clojure.test :refer [deftest is testing]]
+  (:require [kotoba.test :refer [deftest is testing]]
             [commitledger.edge.kv-store :as kv]
             [commitledger.store :as store]))
 

@@ -4,7 +4,7 @@
   transform the real `:cljs`-only `CloudflareKVStore` runs either side
   of `js/JSON.stringify`/`.parse`, without needing a JSON text codec on
   the JVM at all."
-  (:require [clojure.test :refer [deftest is testing]]
+  (:require [kotoba.test :refer [deftest is testing]]
             [commitledger.edge.kv-codec :as codec]
             [commitledger.store :as store]))
 

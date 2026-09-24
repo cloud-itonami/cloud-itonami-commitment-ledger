@@ -3,7 +3,7 @@
   `mock-advisor` (the default everywhere in this repo's own test suite)
   is exercised directly through `infer`; `llm-advisor` is exercised
   against `langchain.model/mock-model` (deterministic, no network)."
-  (:require [clojure.test :refer [deftest is testing]]
+  (:require [kotoba.test :refer [deftest is testing]]
             [commitledger.advisor :as advisor]
             [commitledger.store :as store]
             [langchain.model :as model]))

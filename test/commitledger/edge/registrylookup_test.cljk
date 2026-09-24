@@ -5,7 +5,7 @@
   repo's own live `GET /api/open-business` endpoint it calls, never by
   this repo's own test suite -- see `commitledger.edge.auth-test`'s ns
   docstring for the identical reasoning applied to CACAO verify)."
-  (:require [clojure.test :refer [deftest is testing]]
+  (:require [kotoba.test :refer [deftest is testing]]
             [commitledger.edge.registrylookup :as lookup]))
 
 (deftest mock-lookup-true-case

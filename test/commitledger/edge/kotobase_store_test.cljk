@@ -24,7 +24,7 @@
   (`:tx_edn`/`:query_edn`/`:entity`/...), not JSON string keys."
   (:require [clojure.edn :as edn]
             [kotoba.lang.text :as str]
-            [clojure.test :refer [deftest is testing]]
+            [kotoba.test :refer [deftest is testing]]
             [commitledger.edge.kotobase-http :as khttp]
             [commitledger.edge.kotobase-store :as ks]
             [commitledger.edge.kv-store :as kv]

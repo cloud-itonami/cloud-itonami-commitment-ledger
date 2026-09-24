@@ -2,7 +2,7 @@
   "The phase table as executable tests. The invariant this repo cannot
   regress on: `:commitment/record` and `:commitment/tranche-release`
   must NEVER be members of any phase's `:auto` set."
-  (:require [clojure.test :refer [deftest is testing]]
+  (:require [kotoba.test :refer [deftest is testing]]
             [commitledger.phase :as phase]))
 
 (deftest commitment-record-never-auto-at-any-phase

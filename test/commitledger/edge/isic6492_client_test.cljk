@@ -8,7 +8,7 @@
   self-mint identity import, real `js/fetch`) is not exercised here --
   same reasoning as every other `Live*` wiring in this ns family
   (`commitledger.edge.auth-test`'s ns docstring)."
-  (:require [clojure.test :refer [deftest is testing]]
+  (:require [kotoba.test :refer [deftest is testing]]
             [commitledger.edge.isic6492-client :as isic6492]))
 
 (def sample-application
