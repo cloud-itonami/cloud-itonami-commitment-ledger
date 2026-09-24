@@ -5,7 +5,7 @@
   depends on to resume an `:request-approval`-interrupted run across
   separate, stateless requests. The real `CloudflareCheckpointStore` is
   `:cljs`-only KV-binding interop, exercised at deploy time, not here."
-  (:require [clojure.test :refer [deftest is]]
+  (:require [kotoba.test :refer [deftest is]]
             [commitledger.edge.kv-checkpoint :as kvc]
             [langgraph.checkpoint :as cp]))
 

@@ -9,7 +9,7 @@
     NOR `:commitment/tranche-release` ever auto-commits at any phase,
     `:application/intake` (no capital risk) MAY auto-commit when clean,
     and every decision (commit OR hold) leaves exactly one ledger fact."
-  (:require [clojure.test :refer [deftest is testing]]
+  (:require [kotoba.test :refer [deftest is testing]]
             [langgraph.graph :as g]
             [commitledger.store :as store]
             [commitledger.operation :as op]))

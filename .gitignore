@@ -6,3 +6,4 @@
 /.wrangler/
 /.clj-kondo/.cache/
 /dist/
+.nbb/

@@ -26,7 +26,7 @@
   a CACAO or talks to kotobase.net wire format at all, it only proves
   the LOCAL schema/tx-builder discipline the wire-format layer then
   relies on."
-  (:require [clojure.test :refer [deftest is testing]]
+  (:require [kotoba.test :refer [deftest is testing]]
             [commitledger.store :as store]
             [langchain.db :as d]))
 

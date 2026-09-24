@@ -1,5 +1,5 @@
 (ns commitledger.registry-test
-  (:require [clojure.test :refer [deftest is]]
+  (:require [kotoba.test :refer [deftest is]]
             [commitledger.registry :as r]))
 
 ;; ----------------------------- rate-ceiling-for-principal -----------------------------

@@ -11,7 +11,7 @@
   exactly these core fns (parse `context` -> call core fn -> `->js-
   response`) and are exercised at deploy time / by `scripts/verify-edge-
   bundle`-style smoke checks, not by this JVM suite."
-  (:require [clojure.test :refer [deftest is testing]]
+  (:require [kotoba.test :refer [deftest is testing]]
             [commitledger.edge.auth :as auth]
             [commitledger.edge.commitment-endpoints :as ep]
             [commitledger.edge.isic6492-client :as isic6492]

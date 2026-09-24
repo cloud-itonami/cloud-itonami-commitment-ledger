@@ -22,7 +22,7 @@
   verification.md`'s Alternatives table) -- what IS re-verified here is
   everything this repo actually ADDS on top: the auth-gating decision
   logic itself."
-  (:require [clojure.test :refer [deftest is testing]]
+  (:require [kotoba.test :refer [deftest is testing]]
             [commitledger.edge.auth :as auth]))
 
 ;; ----------------------------- verify-cacao-header -----------------------------

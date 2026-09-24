@@ -13,7 +13,7 @@
   request/response round trip -- see `commitledger.edge.commitment-
   endpoints-test` for the FULL HTTP-path coverage, including the new
   `approve-core!` resume endpoint)."
-  (:require [clojure.test :refer [deftest is testing]]
+  (:require [kotoba.test :refer [deftest is testing]]
             [langgraph.graph :as g]
             [langgraph.checkpoint :as cp]
             [commitledger.advisor :as advisor]
