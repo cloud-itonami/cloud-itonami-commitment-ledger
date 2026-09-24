@@ -25,7 +25,7 @@
      :value      map            ; op-specific echo/annotation
      :stake      kw|nil         ; :actuation/commitment-record | :actuation/tranche-release | nil
      :confidence 0..1}"
-  (:require #?(:clj  [clojure.edn :as edn]
+  (:require #?(:clj  [kotoba.lang.edn :as edn]
                :cljs [cljs.reader :as edn])
             [kotoba.lang.text :as str]
             [commitledger.facts :as facts]

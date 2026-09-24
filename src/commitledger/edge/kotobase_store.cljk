@@ -41,7 +41,7 @@
   from-env! env)` (now async, since minting a CACAO is; those entry
   points already thread through `.then`/`pc/then` chains, so this is a
   same-shape swap one level up, not a rewrite)."
-  (:require #?(:clj  [clojure.edn :as edn]
+  (:require #?(:clj  [kotoba.lang.edn :as edn]
                :cljs [cljs.reader :as edn])
             [commitledger.edge.kotobase-http :as khttp]
             [commitledger.edge.kotobase-identity :as identity]
