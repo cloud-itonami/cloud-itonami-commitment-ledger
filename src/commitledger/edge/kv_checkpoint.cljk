@@ -31,7 +31,7 @@
   datomic-checkpointer`'s own `(pr-str state)`/`(edn/read-string ...)`
   precedent (`orgs/kotoba-lang/langgraph`) -- not a new pattern, just
   applied to a KV blob instead of a Datomic-API attribute."
-  (:require #?(:clj  [clojure.edn :as edn]
+  (:require #?(:clj  [kotoba.lang.edn :as edn]
                :cljs [cljs.reader :as edn])
             [commitledger.edge.pcompat :as pc]
             [langgraph.checkpoint :as cp]))

@@ -22,7 +22,7 @@
   fake backend below, not real kotobase.net JSON), so the fake backend's
   parsed request bodies below carry ordinary Clojure KEYWORD keys
   (`:tx_edn`/`:query_edn`/`:entity`/...), not JSON string keys."
-  (:require [clojure.edn :as edn]
+  (:require [kotoba.lang.edn :as edn]
             [kotoba.lang.text :as str]
             [kotoba.test :refer [deftest is testing]]
             [commitledger.edge.kotobase-http :as khttp]
