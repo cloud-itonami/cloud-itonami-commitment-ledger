@@ -23,7 +23,7 @@
   The round trip DOES run for real, on Node's WebCrypto, via
   `scripts/verify-cacao-mint-roundtrip.cljk` (an nbb script -- nbb is
   this workspace's designated script-tooling runtime, ranked ABOVE the
-  JVM in `CLAUDE.md`'s runtime-priority ladder, and nbb natively
+  JVM in `AGENTS.md`'s runtime-priority ladder, and nbb natively
   executes a `.cljc` file's `:cljs` reader-conditional branch, unlike
   `kbb -M:dev:test`). That script was run for real as part of
   landing this feature; its captured stdout is quoted in `docs/adr/
