@@ -10,7 +10,7 @@
 ;; --project-name cloud-itonami-commitment-ledger` and then discard it
 ;; (this script itself holds no state after the process exits).
 ;;
-;; Runtime priority note (CLAUDE.md): nbb over JVM for tooling. nbb runs
+;; Runtime priority note (AGENTS.md): nbb over JVM for tooling. nbb runs
 ;; on Node, which HAS `globalThis.crypto.subtle` (confirmed: Node v26.3.0,
 ;; 2026-07-24) -- this script is nbb's own empirical confirmation that
 ;; `js/crypto.subtle` Ed25519 keygen/export works under nbb, the same
