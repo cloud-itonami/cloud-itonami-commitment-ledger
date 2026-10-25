@@ -23,7 +23,7 @@
        io.github.com-junkawasaki/langgraph-clj
         {:local/root "../../kotoba-lang/langgraph"}
         io.github.kotoba-lang/langchain-store
-        {:local/root "../../kotoba-lang/langchain-store"}}
+        {:local/root "../../kotoba-lang/kotoba/lib/kotoba.langchainStore"}}
  :aliases
  {;; offline workspace dev -- pin transitive langchain-clj to local checkout.
   ;; TWO distinct maven coordinates resolve to this same physical repo in
@@ -55,8 +55,9 @@
                 {:git/url "https://github.com/kotoba-lang/amu.git"
                  :git/sha "6562af2fd4eb139444cdb44da0f1f7353cc73c77"}
                 io.github.kotoba-lang/kotoba-component
-                {:git/url "https://github.com/kotoba-lang/kotoba-component.git"
-                 :git/sha "99275e24570265ecba91fd4026d993c135a02362"}}
+        {:git/url "https://github.com/kotoba-lang/kotoba.git"
+         :git/sha "3dfb77e29a541416bfd6a39aee202ab770ddf952"
+         :deps/root "lib/kotoba.kotobaComponent"}}
    :main-opts ["-m" "kotoba.compiler.cli"]}
   ;; kbb -M:dev:run  -> drive the demo through one OperationActor
   :run {:main-opts ["-m" "commitledger.sim"]}
@@ -65,8 +66,9 @@
                       {:git/url "https://github.com/kotoba-lang/amu.git"
                        :git/sha "6562af2fd4eb139444cdb44da0f1f7353cc73c77"}
                       io.github.kotoba-lang/kotoba-component
-                      {:git/url "https://github.com/kotoba-lang/kotoba-component.git"
-                       :git/sha "99275e24570265ecba91fd4026d993c135a02362"}
+        {:git/url "https://github.com/kotoba-lang/kotoba.git"
+         :git/sha "3dfb77e29a541416bfd6a39aee202ab770ddf952"
+         :deps/root "lib/kotoba.kotobaComponent"}
                       io.github.cognitect-labs/test-runner
                       {:git/tag "v0.5.1" :git/sha "dfb30dd6605cb6c0efc275e1df1736f6e90d4d73"}}
          :main-opts ["-m" "cognitect.test-runner"]
