@@ -57,7 +57,7 @@
   :dev {:override-deps
         {
          io.github.kotoba-lang/langchain
-         {:local/root "../../kotoba-lang/langchain"}}}
+        {:local/root "../../kotoba-lang/kotoba/lib/kotoba.langchain"}}}
   :component
   {:extra-deps {io.github.kotoba-lang/amu
                 {:git/url "https://github.com/kotoba-lang/amu.git"
